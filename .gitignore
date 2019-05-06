@@ -3,3 +3,6 @@
 ################################################################################
 
 /IoTVisualAlerts/bin/x64/Debug
+/IoTVisualAlerts/obj
+/.vs
+/IoTVisualAlerts/.vs/IoTVisualAlerts/v15
