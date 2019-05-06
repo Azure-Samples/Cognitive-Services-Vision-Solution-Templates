@@ -1,0 +1,1 @@
+# Cognitive-Services-Vision-Solution-Templates
