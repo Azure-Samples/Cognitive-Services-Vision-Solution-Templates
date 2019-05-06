@@ -10,7 +10,7 @@ using Windows.Storage;
 /// See Custom Vision ONNX UWP sample https://github.com/Azure-Samples/Custom-Vision-ONNX-UWP/blob/master/VisionApp/ONNXModel.cs
 /// </summary>
 
-namespace IoTVisualAlerts
+namespace IoTVisualAlerts.CustomVision
 {
     public sealed class CustomVisionModelInput
     {

@@ -1,4 +1,6 @@
 ﻿using Emmellsoft.IoT.Rpi.SenseHat;
+using IoTVisualAlerts.CustomVision;
+using IoTVisualAlerts.IoTHub;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training.Models;
 using System;
 using System.Collections.Generic;

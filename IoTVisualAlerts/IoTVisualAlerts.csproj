@@ -119,9 +119,9 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CustomVisionONNXModel.cs" />
-    <Compile Include="CustomVisionServiceWrapper.cs" />
-    <Compile Include="IoTHubWrapper.cs" />
+    <Compile Include="CustomVision\CustomVisionONNXModel.cs" />
+    <Compile Include="CustomVision\CustomVisionServiceWrapper.cs" />
+    <Compile Include="IoTHub\IoTHubWrapper.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
