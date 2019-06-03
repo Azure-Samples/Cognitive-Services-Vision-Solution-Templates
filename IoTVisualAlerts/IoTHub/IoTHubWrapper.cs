@@ -12,6 +12,7 @@ namespace IoTVisualAlerts.IoTHub
     {
         public event EventHandler<int> UploadTrainingImagesRequested;
         public event EventHandler DeleteCurrentModelRequested;
+        public bool IsInitialized { get; private set; } = false;
 
         public static IoTHubWrapper Instance { get; } = new IoTHubWrapper();
 
@@ -24,18 +25,23 @@ namespace IoTVisualAlerts.IoTHub
 
         private IoTHubWrapper() { }
 
-        static IoTHubWrapper()
+        public async Task InitializeIoTHubConnectionAsync()
         {
+            if (IsInitialized)
+            {
+                return;
+            }
+
             // Connect to the IoT hub using the MQTT protocol
             Instance._deviceClient = DeviceClient.CreateFromConnectionString(s_connectionString, TransportType.Mqtt);
-        }
+            Instance._deviceClient.OperationTimeoutInMilliseconds = 1000;
 
-        public async Task InitMethodHandlersAsync()
-        {
             // Create a handler for the direct method calls
             await Instance._deviceClient.SetMethodHandlerAsync("EnterLearningMode", Instance.UploadTrainingImages, null);
             await Instance._deviceClient.SetMethodHandlerAsync("DeleteCurrentModel", Instance.DeleteCurrentModel, null);
             await Instance._deviceClient.SetMethodHandlerAsync("GetIpAddress", Instance.GetIpAddress, null);
+
+            IsInitialized = true;
         }
 
         private Task<MethodResponse> GetIpAddress(MethodRequest methodRequest, object userContext)
@@ -55,7 +61,7 @@ namespace IoTVisualAlerts.IoTHub
 
             Instance.UploadTrainingImagesRequested?.Invoke(Instance, numImagesRequested);
 
-            // Acknowlege the direct method call with a 200 success message
+            // Acknowledge the direct method call with a 200 success message
             string result = "{\"result\":\"Executed direct method: " + methodRequest.Name + "\"}";
             return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes(result), 200));
         }
@@ -65,13 +71,19 @@ namespace IoTVisualAlerts.IoTHub
         {
             Instance.DeleteCurrentModelRequested?.Invoke(Instance, EventArgs.Empty);
 
-            // Acknowlege the direct method call with a 200 success message
+            // Acknowledge the direct method call with a 200 success message
             string result = "{\"result\":\"Executed direct method: " + methodRequest.Name + "\"}";
             return Task.FromResult(new MethodResponse(Encoding.UTF8.GetBytes(result), 200));
         }
 
-        public async void SendDetectedClassAlertToCloudsync(string label, double confidence)
+        public async Task SendDetectedClassAlertToCloudAsync(string label, double confidence)
         {
+            if (!IsInitialized)
+            {
+                // skip the call until we can establish a connection with IoT Hub
+                return;
+            }
+
             var detectedClassDataPoint = new
             {
                 label,
@@ -84,11 +96,26 @@ namespace IoTVisualAlerts.IoTHub
             // An IoT hub can filter on these properties without access to the message body.
             message.Properties.Add("detectedClassAlert", "true");
 
-            await _deviceClient.SendEventAsync(message);
+            try
+            {
+                await _deviceClient.SendEventAsync(message);
+            }
+            catch
+            {
+                // we will start hitting errors if our IoT Hub connection goes invalid. In that case, reset the 
+                // status so we initialize it again.
+                IsInitialized = false;
+            }
         }
 
-        public async void SendStatusMessageToCloudsync(string status)
+        public async Task SendStatusMessageToCloudAsync(string status)
         {
+            if (!IsInitialized)
+            {
+                // skip the call until we can establish a connection with IoT Hub
+                return;
+            }
+
             // Create JSON message
             var dataPoint = new
             {
@@ -97,8 +124,17 @@ namespace IoTVisualAlerts.IoTHub
             var messageString = JsonConvert.SerializeObject(dataPoint);
             var message = new Message(Encoding.ASCII.GetBytes(messageString));
 
-            // Send the tlemetry message
-            await _deviceClient.SendEventAsync(message);
+            // Send the telemetry message
+            try
+            {
+                await _deviceClient.SendEventAsync(message);
+            }
+            catch
+            {
+                // we will start hitting errors if our IoT Hub connection goes invalid. In that case, reset the 
+                // status so we initialize it again.
+                IsInitialized = false;
+            }
         }
     }
 }

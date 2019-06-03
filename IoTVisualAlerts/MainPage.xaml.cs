@@ -80,8 +80,10 @@ namespace IoTVisualAlerts
 
             deviceInfoTextBlock.Text = $"Device IP Address: {Util.GetIpAddress()}";
 
-            // suscribe to events from IoT Hub direct method calls
-            await IoTHubWrapper.Instance.InitMethodHandlersAsync();
+            // Trigger IoT Hub initialization. It might potentially fail right away (e.g. no internet connection), so we will also
+            // keep checking for it in the processing loop
+            await CheckIoTHubConnectionAsync();
+
             IoTHubWrapper.Instance.UploadTrainingImagesRequested += UploadTrainingImagesRequested;
             IoTHubWrapper.Instance.DeleteCurrentModelRequested += DeleteCurrentModelRequested;
 
@@ -104,6 +106,36 @@ namespace IoTVisualAlerts
             await DeleteCurrentONNXModelAsync();
         }
 
+        private async Task CheckIoTHubConnectionAsync()
+        {
+            // Trigger check for IoT Hub initialization so we eventually get it done and can start exchanging data with it 
+            try
+            {
+                if (IoTHubWrapper.Instance.IsInitialized)
+                {
+                    await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                    {
+                        iotHubStatusTextBlock.Text = "IoT Hub Status: Connected";
+                    });
+
+                    return;
+                }
+                else
+                {
+                    // Try initialize. If we fail, we will update the UI with the error message in the catch block, and if we pass, 
+                    // we will eventually update it to show the success state the next time this method is called by the processing loop
+                    await IoTHubWrapper.Instance.InitializeIoTHubConnectionAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    iotHubStatusTextBlock.Text = $"IoT Hub Status: Failure. {ex.Message}";
+                });
+            }
+        }
+
         #endregion
 
         #region Processing loop and status update
@@ -112,6 +144,8 @@ namespace IoTVisualAlerts
         {
             while (true)
             {
+                await CheckIoTHubConnectionAsync();
+
                 switch (_currentState)
                 {
                     case State.Scoring:
@@ -123,7 +157,7 @@ namespace IoTVisualAlerts
                     case State.WaitingForTrainedModel:
                         try
                         {
-                            UpdateStatus("Waiting", "Waiting for trained iteration...");
+                            await UpdateStatus("Waiting", "Waiting for trained iteration...");
                             Export onnxExport = await _cvsWrapper.GetTrainedONNXExportIfAvailableAsync(_timeOfLastImageUpload);
                             if (onnxExport == null)
                             {
@@ -133,21 +167,21 @@ namespace IoTVisualAlerts
                             }
                             else if (onnxExport?.DownloadUri != null)
                             {
-                                UpdateStatus("Waiting", "Downloading ONNX model...");
+                                await UpdateStatus("Waiting", "Downloading ONNX model...");
                                 BackgroundDownloader downloader = new BackgroundDownloader();
                                 DownloadOperation download = downloader.CreateDownload(new Uri(onnxExport.DownloadUri), 
                                     await ApplicationData.Current.LocalFolder.CreateFileAsync("model.onnx", CreationCollisionOption.ReplaceExisting));
                                 await download.StartAsync();
 
                                 // load the new model and switch to scoring mode
-                                UpdateStatus("Waiting", "Loading ONNX model...");
+                                await UpdateStatus("Waiting", "Loading ONNX model...");
                                 await LoadONNXModelAsync();
 
                                 _currentState = State.Scoring;
                             }
-                        } catch (Exception ex)
+                        }catch (Exception ex)
                         {
-                            UpdateStatus("Error", $"Failure while setting up new trained model: {ex.Message}");
+                            await UpdateStatus("Error", $"Failure while setting up new trained model: {ex.Message}");
                         }
                         break;
 
@@ -157,7 +191,7 @@ namespace IoTVisualAlerts
                         break;
 
                     case State.NoModel:
-                        UpdateStatus("No model available", "Nothing detected");
+                        await UpdateStatus("No model available", "Nothing detected");
                         await Task.Delay(1000);
                         break;
 
@@ -183,17 +217,11 @@ namespace IoTVisualAlerts
             }
         }
 
-        private async void UpdateStatus(string state, string status, string details = "", bool sendMessageToIoTHub = true)
+        private async Task UpdateStatus(string state, string status, string details = "", bool sendMessageToIoTHub = true)
         {
             if (sendMessageToIoTHub)
             {
-                try
-                {
-                    IoTHubWrapper.Instance.SendStatusMessageToCloudsync($"[{state}] {status}");
-                }
-                catch
-                {
-                }
+                await IoTHubWrapper.Instance.SendStatusMessageToCloudAsync($"[{state}] {status}");
             }
 
             await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
@@ -222,7 +250,7 @@ namespace IoTVisualAlerts
             }
             catch
             {
-                UpdateStatus("Error", "Couldn't clear project before adding new images. Ignoring error.");
+                await UpdateStatus("Error", "Couldn't clear project before adding new images. Ignoring error and sending new images.");
             }
             finally
             {
@@ -245,11 +273,11 @@ namespace IoTVisualAlerts
                 var stream = await GetStreamFromVideoFrameAsync(await CaptureFrameAsync());
                 await _cvsWrapper.UploadTrainingImageAsync(stream);
                 _timeOfLastImageUpload = DateTime.UtcNow;
-                UpdateStatus("Uploading images", $"{++_imageUploadCount} uploaded");
+                await UpdateStatus("Uploading images", $"{++_imageUploadCount} uploaded");
             }
             catch (Exception ex)
             {
-                UpdateStatus("Error", "Couldn't add training image: " + ex.Message);
+                await UpdateStatus("Error", "Couldn't add training image: " + ex.Message);
             }
         }
 
@@ -278,18 +306,18 @@ namespace IoTVisualAlerts
                         DateTime start = DateTime.Now;
                         CustomVisionModelOutput output = await this._customVisionONNXModel.EvaluateAsync(input);
 
-                        ShowPredictionResults(output, Math.Round((DateTime.Now - start).TotalMilliseconds));
+                        await ShowPredictionResults(output, Math.Round((DateTime.Now - start).TotalMilliseconds));
                     }
                 }
             }
             catch (Exception ex)
             {
                 this._isModelLoadedSuccessfully = false;
-                UpdateStatus("Error", $"Failure scoring camera frame: {ex.Message}");
+                await UpdateStatus("Error", $"Failure scoring camera frame: {ex.Message}");
             }
         }
 
-        private void ShowPredictionResults(CustomVisionModelOutput output, double latency)
+        private async Task ShowPredictionResults(CustomVisionModelOutput output, double latency)
         {
             List<Tuple<string, float>> result = output.GetPredictionResult();
             Tuple<string, float> topMatch = result?.Where(x => x.Item2 > MinProbabilityValue)?.OrderByDescending(x => x.Item2).FirstOrDefault();
@@ -304,14 +332,14 @@ namespace IoTVisualAlerts
                     //IoTHubHelper.Instance.SendDetectedClassAlertToCloudsync(topMatch.Item1, topMatch.Item2);
                     UpdateSenseHatLights(lightsOn: true);
                 }
-                IoTHubWrapper.Instance.SendDetectedClassAlertToCloudsync(topMatch.Item1, Math.Round(topMatch.Item2, 2));
-                UpdateStatus("Scoring", $"{topMatch.Item1} ({Math.Round(topMatch.Item2 * 100)}%)", $"{Math.Round(1000 / latency)}fps", sendMessageToIoTHub: false);
+                await IoTHubWrapper.Instance.SendDetectedClassAlertToCloudAsync(topMatch.Item1, Math.Round(topMatch.Item2, 2));
+                await UpdateStatus("Scoring", $"{topMatch.Item1} ({Math.Round(topMatch.Item2 * 100)}%)", $"{Math.Round(1000 / latency)}fps", sendMessageToIoTHub: false);
             }
             else
             {
                 _lastMatchLabel = null;
                 UpdateSenseHatLights(lightsOn: false);
-                UpdateStatus("Scoring", "Nothing detected", $"{Math.Round(1000 / latency)}fps");
+                await UpdateStatus("Scoring", "Nothing detected", $"{Math.Round(1000 / latency)}fps");
             }
         }
 
@@ -334,7 +362,7 @@ namespace IoTVisualAlerts
             catch (Exception ex)
             {
                 _isModelLoadedSuccessfully = false;
-                UpdateStatus("Error", "Failure loading ONNX model: " + ex.Message);
+                await UpdateStatus("Error", "Failure loading ONNX model: " + ex.Message);
             }
         }
 
@@ -352,11 +380,11 @@ namespace IoTVisualAlerts
                 {
                     await modelFile.DeleteAsync();
                     _currentState = State.NoModel;
-                    UpdateStatus("No model", "Nothing detected");
+                    await UpdateStatus("No model", "Nothing detected");
                 }
                 catch
                 {
-                    UpdateStatus("Error", "Couldn't delete current model");
+                    await UpdateStatus("Error", "Couldn't delete current model");
                 }
             }
         }
@@ -380,7 +408,7 @@ namespace IoTVisualAlerts
             }
             catch
             {
-                UpdateStatus("Error", "No camera detected. Connect a camera and restart.");
+                await UpdateStatus("Error", "No camera detected. Connect a camera and restart.");
             }
         }
 

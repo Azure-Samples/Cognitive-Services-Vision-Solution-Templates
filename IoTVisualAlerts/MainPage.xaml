@@ -18,31 +18,34 @@
         
         <TextBlock Text="IoT Visual Alert Demo" Margin="24" HorizontalAlignment="Center" Style="{ThemeResource HeaderTextBlockStyle}"/>
 
-        <Button HorizontalAlignment="Right" Background="Transparent" VerticalAlignment="Center" Margin="12" >
-            <FontIcon Glyph="&#xE946;" FontFamily="Segoe MDL2 Assets"/>
-            <Button.Flyout>
-                <Flyout>
-                    <StackPanel Orientation="Vertical" Width="250" >
-                        <TextBlock x:Name="deviceInfoTextBlock"/>
-                        <Button Click="OnEnterLearningModeButtonClicked" Margin="0,6">Enter Learning Mode</Button>
-                        <Button Click="OnDeleteCurrentModelClicked">Delete Current Model</Button>
-                    </StackPanel>
-                </Flyout>
-            </Button.Flyout>
-        </Button>
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Right" Margin="12,0" VerticalAlignment="Center" >
+            <Button Background="Transparent" HorizontalAlignment="Right">
+                <FontIcon Glyph="&#xE946;" FontFamily="Segoe MDL2 Assets"/>
+                <Button.Flyout>
+                    <Flyout>
+                        <StackPanel Orientation="Vertical" Width="300" >
+                            <TextBlock x:Name="deviceInfoTextBlock"/>
+                            <Button Click="OnEnterLearningModeButtonClicked" Margin="0,6">Enter Learning Mode</Button>
+                            <Button Click="OnDeleteCurrentModelClicked">Delete Current Model</Button>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+            <TextBlock x:Name="iotHubStatusTextBlock" Margin="0,6" TextWrapping="WrapWholeWords" MaxWidth="200" Style="{ThemeResource CaptionTextBlockStyle}" />
+        </StackPanel>
 
         <CaptureElement x:Name="captureElement" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" />
 
-        <Grid Grid.Row="2" Height="80">
+        <Grid Grid.Row="2" Height="80" >
             <Grid.ColumnDefinitions>
-                <ColumnDefinition />
+                <ColumnDefinition Width="0.3*"/>
                 <ColumnDefinition/>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="0.3*"/>
             </Grid.ColumnDefinitions>
 
             <TextBlock x:Name="currentStateTextBlock" Style="{ThemeResource TitleTextBlockStyle}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5"/>
             <TextBlock x:Name="statusTextBlock" Grid.Column="1" Style="{ThemeResource TitleTextBlockStyle}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <TextBlock x:Name="statusDetailsTextBlock" Margin="0,0,12,0" Grid.Column="2" Style="{ThemeResource TitleTextBlockStyle}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <TextBlock x:Name="statusDetailsTextBlock" Grid.Column="2" Style="{ThemeResource TitleTextBlockStyle}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         </Grid>
         
     </Grid>
