@@ -83,10 +83,11 @@ Custom Vision portal and build a new model based on the training images uploaded
 As soon as the trained model is downloaded from the previous state, the app will switch to the Scoring state and start
 scoring images from the camera in a continuous loop. 
 
-The top tag with each scoring will be displayed on the screen (or No Matches will be displayed in case nothing, or the Negative class, is detected).
+The top tag with each scoring will be displayed on the screen (or No Matches will be displayed in case no classes, or the Negative class, is detected).
 These results are also sent to IoT Hub as messages, and in the case of
 a class being detected, the message will include the label, the confidence and a property called ```detectedClassAlert``` which could be used from 
 IoT Hub clients interested in doing fast message routing based on properties. 
+In addition, the sample uses a Sense HAT [library](https://github.com/emmellsoft/RPi.SenseHat) to detect when running on a Raspberry Pi with a Sense HAT unit, and to use it as an output display by setting all display lights to red whenever a class is detected, or to blank when nothing is detected.
 
 ## Additional info
 * If you would like to reset the app back to the original state, you can do so by clicking on the buttom on the top-right corner of the UI, or by 
