@@ -44,12 +44,12 @@ This demo runs in a continuous loop state machine with 4 states:
 If you are running the sample in your own development PC, just hit F5 in Visual Studio to start. The app should start and show the live 
 feed from the camera, as well as a status message. 
 
-If deploying to a IoT device, you will need to select the Remote Machine target option in Visual Studio and provide the Ip address of your 
-device (it must be on the same network). You can get the Ip address from the Windows IoT default app once you boot into the device and connect 
+If deploying to a IoT device, you will need to select the Remote Machine target option in Visual Studio and provide the Ip Address of your 
+device (it must be on the same network). You can get the Ip Address from the Windows IoT default app once you boot into the device and connect 
 it to the network.
 
 ### Learning new visual states
-When running for the first time the app doesn't have any knowledge of any visual states yet. As a result it won't be doing much, and simply 
+When running for the first time the app won't have any knowledge of any visual states. As a result it won't be doing much, and simply 
 display a status message that there is no model available. To change that, we need to transition the app to the Capturing Training Images state. 
 
 #### Capturing training images
@@ -62,7 +62,7 @@ Once in this state, the app will capture images at about 2fps until the desided 
 but this parameter can be changed by simply passing the desired number as a parameter to the EnterLearningMode IoT Hub method. 
 
 While pictures are being taken, just expose the camera to the types of visual states that you would like to be detected (e.g. empty room, room with
-people, empty desk, desk with a toy truck, etc.
+people, empty desk, desk with a toy truck, etc).
 
 #### Building a model with Custom Vision
 Once the app has finished uploading training images it will switch to the Waiting For Trained Model state. This is where you now need to go to the
