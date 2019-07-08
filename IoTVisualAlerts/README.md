@@ -1,6 +1,11 @@
 # IoT Visual Alert Sample
-This sample illustrates how to leverage Microsoft Custom Vision Service to train a device with a camera to detect pre-defined visual states. 
-A visual state could be something like an empty room or a room with people, an empty driveway or a driveway with a truck, etc. 
+This sample illustrates how to leverage Microsoft Custom Vision Service to train a device with a camera to detect specific visual states, and how to run this
+detection pipeline offline directly on the device through an ONNX model exported from Custom Vision. 
+
+A visual state could be something like an empty room or a room with people, an empty driveway or a driveway with a truck, etc. In this case below, you can see
+it in action detecting when a cat is in front of the camera.
+
+![alt text](ReadmeAssets/IoTAlertScoring.jpg "Scoring image example")
 
 This demo runs in a continuous loop state machine with 4 states:
 * **No Model**: A no-op state. It will just sleep for 1 second and check again.
@@ -20,6 +25,15 @@ This demo runs in a continuous loop state machine with 4 states:
   * If you need help setting up a new device, there is a good tutorial [here](https://docs.microsoft.com/en-us/windows/iot-core/tutorials/quickstarter/devicesetup). 
     For Raspberry Pi 2s and 3s, you can do it easily directly from the IoT Dashboard app, while for a device such as DrangonBoard, you will need to flash 
     it using the [eMMC method](https://docs.microsoft.com/en-us/windows/iot-core/tutorials/quickstarter/devicesetup#flashing-with-emmc-for-dragonboard-410c-other-qualcomm-devices).
+
+## Source Code Structure
+| File | Description |
+|-------------|-------------|
+| [MainPage.xaml](MainPage.xaml) | XAML UI for the demo UI. It hosts the web camera control and contains the several labels used for status updates.|
+| [MainPage.xaml.cs](MainPage.xaml.cs) | Code behind for the XAML UI for the demo. It contains the state machine processing code.|
+| [CustomVision\CustomVisionServiceWrapper.cs](CustomVision\CustomVisionServiceWrapper.cs) | Wrapper class that facilitates integration with the Custom Vision Service.|
+| [CustomVision\CustomVisionONNXModel.cs](CustomVision\CustomVisionONNXModel.cs) | Wrapper class that facilitates integration with Windows ML for loading ONNX models and scoring images against it.|
+| [IoTHub\IotHubWrapper.cs](IoTHub\IotHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub.|
 
 ## Setup
 
@@ -58,7 +72,7 @@ To enter the Capturing Training Images state and start collecting training image
   * Via a Direct Method call to the device via IoT Hub. The method for this is called EnterLearningMode, and you can send it via the device entry
     in the IoT Hub blade in Azure, or via a tool such as [IoT Hub Device Explorer](https://github.com/Azure/azure-iot-sdk-csharp/tree/master/tools/DeviceExplorer).
  
-Once in this state, the app will capture images at about 2fps until the desided number of images has been captured. By default it will 30 images,
+Once in this state, the app will capture images at about 2fps until the desired number of images has been captured. By default it will 30 images,
 but this parameter can be changed by simply passing the desired number as a parameter to the EnterLearningMode IoT Hub method. 
 
 While pictures are being taken, just expose the camera to the types of visual states that you would like to be detected (e.g. empty room, room with
@@ -71,7 +85,7 @@ Custom Vision portal and build a new model based on the training images uploaded
 1. Log-in to the [Custom Vision](http://customvision.ai) portal
 2. Find your target project, which by now should have all the training images that the app uploaded 
 3. Start tagging based on your desired visual states:
-    * For example, if this is a classifer to detect between an empty room and a room with people in it, we recommend tagging 5 or more images with
+    * For example, if this is a classifier to detect between an empty room and a room with people in it, we recommend tagging 5 or more images with
       people as a new class (let's say People), and tagging 5 or more images without people as the Negative tag. This will help the model better 
       differentiate between the two states, given that there will be a lot of similarities between them in this case.
     * As another example, let's say the goal is to approximate how full a shelf with products is, then you might want to create tags such as EmptyShelf,
@@ -90,19 +104,19 @@ IoT Hub clients interested in doing fast message routing based on properties.
 In addition, the sample uses a Sense HAT [library](https://github.com/emmellsoft/RPi.SenseHat) to detect when running on a Raspberry Pi with a Sense HAT unit, and to use it as an output display by setting all display lights to red whenever a class is detected, or to blank when nothing is detected.
 
 ## Additional info
-* If you would like to reset the app back to the original state, you can do so by clicking on the buttom on the top-right corner of the UI, or by 
-  invoking the method ```DeleteCurrentModel```.
+* If you would like to reset the app back to the original state, you can do so by clicking on the button on the top-right corner of the UI, or by 
+  invoking the method ```DeleteCurrentModel``` via IoT Hub.
 * If after going through the process of uploading training images you realized that the images 
 aren't good enough for your needs, you can repeat the flow by issuing the ```EnterLearningMode``` method again. This method also can take as argument 
 a number that indicates how many images to upload, in case the default value (30) is not good enough.
-* If you are running the app from an IoT device, it can be handy to know its Ip Address to do things such as establishing a remote connection via Windows IoT
-  Remote Client. For this, the app comes with a handy ```GetIpAddress``` method that can be called through Iot Hub. This Ip Address is also displayed under the
+* If you are running the app from an IoT device, it can be handy to know its Ip Address to do things such as establishing a remote connection via the [Windows IoT
+  Remote Client](https://www.microsoft.com/en-us/p/windows-iot-remote-client/9nblggh5mnxz#activetab=pivot:overviewtab). For this, the app comes with a handy ```GetIpAddress``` method that can be called through IoT Hub. This Ip Address is also displayed under the
   Information menu on the top-right corner of the app UI.
 
 ## Ideas for next steps
 * Create a Power BI Dashboard to visualize those IoT Hub alerts sent by the sample when visual alerts are detected. There is a good tutorial
   [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-live-data-visualization-in-power-bi).
-* Create a Logic App that reponds to those IoT Hub alerts when visual alerts are detected. There is a good tutorial
+* Create a Logic App that responds to those IoT Hub alerts when visual alerts are detected. There is a good tutorial
   [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-monitoring-notifications-with-azure-logic-apps) that shows how to do things such as sending an email.
 * Add an IoT Hub method to the sample that makes it switch directly to the ```WaitingForTrainingModel``` state. The idea here is to enable you to build the model
-  with images that go beyond the images captured by the sample itself.
+  with images that go beyond the images captured by the sample itself, and simply push that model to the device with a command.
