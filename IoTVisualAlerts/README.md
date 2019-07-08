@@ -24,11 +24,11 @@ This demo runs in a continuous loop state machine with 4 states:
 ## Source Code Structure
 | File | Description |
 |-------------|-------------|
-| [MainPage.xaml](MainPage.xaml) | XAML UI for the demo UI. It hosts the web camera control and contains the several labels used for status updates|
-| [MainPage.xaml.cs](MainPage.xaml.cs) | Code behind for the XAML UI for the demo. It contains the state machine processing code|
-| [CustomVision\CustomVisionServiceWrapper.cs](CustomVision\CustomVisionServiceWrapper.cs) | Wrapper class that facilitates integration with the Custom Vision Service|
-| [CustomVision\CustomVisionONNXModel.cs](CustomVision\CustomVisionONNXModel.cs) | Wrapper class that facilitates integration with Windows ML for loading ONNX models and scoring images against it|
-| [IoTHub\IotHubWrapper.cs](IoTHub\IotHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub|
+| [MainPage.xaml](MainPage.xaml) | XAML UI for the demo UI. It hosts the web camera control and contains the several labels used for status updates.|
+| [MainPage.xaml.cs](MainPage.xaml.cs) | Code behind for the XAML UI for the demo. It contains the state machine processing code.|
+| [CustomVision\CustomVisionServiceWrapper.cs](CustomVision\CustomVisionServiceWrapper.cs) | Wrapper class that facilitates integration with the Custom Vision Service.|
+| [CustomVision\CustomVisionONNXModel.cs](CustomVision\CustomVisionONNXModel.cs) | Wrapper class that facilitates integration with Windows ML for loading ONNX models and scoring images against it.|
+| [IoTHub\IotHubWrapper.cs](IoTHub\IotHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub.|
 
 ## Setup
 
