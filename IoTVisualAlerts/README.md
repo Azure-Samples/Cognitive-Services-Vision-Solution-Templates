@@ -1,6 +1,7 @@
 # IoT Visual Alert Sample
-This sample illustrates how to leverage Microsoft Custom Vision Service to train a device with a camera to detect pre-defined visual states. 
-A visual state could be something like an empty room or a room with people, an empty driveway or a driveway with a truck, etc. 
+This sample illustrates how to leverage Microsoft Custom Vision Service to train a device with a camera to detect specific visual states, and how to run this
+detection pipeline offline directly on the device through an ONNX model exported from Custom Vision. A visual state could be something like an empty room or 
+a room with people, an empty driveway or a driveway with a truck, etc. 
 
 This demo runs in a continuous loop state machine with 4 states:
 * **No Model**: A no-op state. It will just sleep for 1 second and check again.
