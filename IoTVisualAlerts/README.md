@@ -55,11 +55,11 @@ This demo runs in a continuous loop state machine with 4 states:
 
 ## Running the sample
 
-If you are running the sample in your own development PC, just hit F5 in Visual Studio to start. The app should start and show the live 
+If you are running the sample in your own development PC, just select x64 or x86 for the target platform, Local Machine for the target device and hit F5 in Visual Studio. The app should start and show the live 
 feed from the camera, as well as a status message. 
 
-If deploying to a IoT device, you will need to select the Remote Machine target option in Visual Studio and provide the Ip Address of your 
-device (it must be on the same network). You can get the Ip Address from the Windows IoT default app once you boot into the device and connect 
+If deploying to a IoT device running ARM, you will need to select ARM as the target platform, Remote Machine as the target device and provide the Ip Address of your 
+device when asked (it must be on the same network). You can get the Ip Address from the Windows IoT default app once you boot into the device and connect 
 it to the network.
 
 ### Learning new visual states
