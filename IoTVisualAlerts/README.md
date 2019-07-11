@@ -3,16 +3,18 @@ This sample illustrates how to leverage Microsoft Custom Vision Service to train
 detection pipeline offline directly on the device through an ONNX model exported from Custom Vision. 
 
 A visual state could be something like an empty room or a room with people, an empty driveway or a driveway with a truck, etc. In this case below, you can see
-it in action detecting when a cat is in front of the camera.
+it in action detecting when a banana or an apple is placed in front of the camera.
 
-![alt text](ReadmeAssets/IoTAlertScoring.jpg "Scoring image example")
+<p align="center">
+  <img src="ReadmeAssets/Scoring.gif" />
+</p>
 
-This demo runs in a continuous loop state machine with 4 states:
+This demo runs in a continuous loop, following a state machine with 4 states:
 * **No Model**: A no-op state. It will just sleep for 1 second and check again.
 * **Capturing Training Images**: While at this state, a picture is captured and uploaded as training image to the target Custom Vision project.
   It will then sleep 500ms and do it again until a set max number of images are captured.
-* **Waiting For Trained Model**: While at this state, the current status of the target Custom Vision project is checked every second to see 
-  whether it has a trained iteration. Once it finds one, it will export the model to a local file and switch to the Scoring state.
+* **Waiting For Trained Model**: While at this state, the app calls Custom Vision every second to check whether the target project contains a trained iteration. Once 
+  it finds one, it will export the corresponding ONNX model to a local file and switch to the Scoring state.
 * **Scoring**: While at this state, a frame from the camera is evaluated against the exported ONNX model using Windows ML. The result is 
   displayed in the screen and sent as a message to IoT Hub, followed by sleeping 1 second before scoring a new frame. 
 
@@ -31,9 +33,9 @@ This demo runs in a continuous loop state machine with 4 states:
 |-------------|-------------|
 | [MainPage.xaml](MainPage.xaml) | XAML UI for the demo UI. It hosts the web camera control and contains the several labels used for status updates.|
 | [MainPage.xaml.cs](MainPage.xaml.cs) | Code behind for the XAML UI for the demo. It contains the state machine processing code.|
-| [CustomVision\CustomVisionServiceWrapper.cs](CustomVision\CustomVisionServiceWrapper.cs) | Wrapper class that facilitates integration with the Custom Vision Service.|
-| [CustomVision\CustomVisionONNXModel.cs](CustomVision\CustomVisionONNXModel.cs) | Wrapper class that facilitates integration with Windows ML for loading ONNX models and scoring images against it.|
-| [IoTHub\IotHubWrapper.cs](IoTHub\IotHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub.|
+| [CustomVision\CustomVisionServiceWrapper.cs](CustomVision/CustomVisionServiceWrapper.cs) | Wrapper class that facilitates integration with the Custom Vision Service.|
+| [CustomVision\CustomVisionONNXModel.cs](CustomVision/CustomVisionONNXModel.cs) | Wrapper class that facilitates integration with Windows ML for loading ONNX models and scoring images against it.|
+| [IoTHub\IotHubWrapper.cs](IoTHub/IotHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub.|
 
 ## Setup
 
@@ -79,9 +81,15 @@ While pictures are being taken, just expose the camera to the types of visual st
 people, empty desk, desk with a toy truck, etc).
 
 #### Building a model with Custom Vision
-Once the app has finished uploading training images it will switch to the Waiting For Trained Model state. This is where you now need to go to the
-Custom Vision portal and build a new model based on the training images uploaded earlier.
+Once the app has finished uploading training images, it will switch to the Waiting For Trained Model state. This is where you now need to go to the
+Custom Vision portal and build a new model based on the training images uploaded earlier. Here is an animation showing this in action to label a few 
+photos with a Banana tag:
 
+<p align="center">
+  <img  src="ReadmeAssets/Labeling.gif" />
+</p>
+
+To repeat this with your own scenario:
 1. Log-in to the [Custom Vision](http://customvision.ai) portal
 2. Find your target project, which by now should have all the training images that the app uploaded 
 3. Start tagging based on your desired visual states:
@@ -91,7 +99,8 @@ Custom Vision portal and build a new model based on the training images uploaded
     * As another example, let's say the goal is to approximate how full a shelf with products is, then you might want to create tags such as EmptyShelf,
       PartiallyFullShelf and FullShelf.
 4. Hit the Train button
-5. Once training is complete, you will notice the app will detect and start the process of exporting it to ONNX and downloading the model.     
+5. Once training is complete, the app will detect that a trained iteration is available and will start the process of exporting the trained model to 
+   ONNX and downloading it to the device.     
 
 #### Scoring against the trained model
 As soon as the trained model is downloaded from the previous state, the app will switch to the Scoring state and start
@@ -119,4 +128,4 @@ a number that indicates how many images to upload, in case the default value (30
 * Create a Logic App that responds to those IoT Hub alerts when visual alerts are detected. There is a good tutorial
   [here](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-monitoring-notifications-with-azure-logic-apps) that shows how to do things such as sending an email.
 * Add an IoT Hub method to the sample that makes it switch directly to the ```WaitingForTrainingModel``` state. The idea here is to enable you to build the model
-  with images that go beyond the images captured by the sample itself, and simply push that model to the device with a command.
+  with images that go beyond the images captured by the sample itself, so you can simply push that model to the device with a command.
