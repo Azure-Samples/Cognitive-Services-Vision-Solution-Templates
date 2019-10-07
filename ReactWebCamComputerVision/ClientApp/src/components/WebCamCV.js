@@ -15,11 +15,18 @@ export class WebCamCV extends Component {
     constructor(props) {
         super(props);
         this.state = {
+
+            /* Set the subscription key here */
+            subscriptionKey: '' , 
+            /* For example, if your subscription key is ABCDE12345, the line should look like
+             * subscriptionKey: 'ABCDE12345' , */
+
             facingMode: "user",
             img: null,
             objects: null,
             tags: null,
             caption: null,
+            captureOn: false,
         };
         this.makeblob = this.makeblob.bind(this);
         this.capture = this.capture.bind(this);
@@ -49,6 +56,8 @@ export class WebCamCV extends Component {
 
     updateCanvas() {
         const ctx = this.canvas.getContext('2d');
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
         var img = new Image;
         let objects = this.state.objects;
 
@@ -91,7 +100,7 @@ export class WebCamCV extends Component {
         fetch('https://westus.api.cognitive.microsoft.com/vision/v2.0/detect/', {
             method: 'POST',
             headers: {
-                'Ocp-Apim-Subscription-Key': '',
+                'Ocp-Apim-Subscription-Key': this.state.subscriptionKey,
                 'Content-Type': 'application/octet-stream',
             },
 
@@ -107,7 +116,7 @@ export class WebCamCV extends Component {
         fetch('https://westus.api.cognitive.microsoft.com/vision/v2.0/describe/', {
             method: 'POST',
             headers: {
-                'Ocp-Apim-Subscription-Key': '',
+                'Ocp-Apim-Subscription-Key': this.state.subscriptionKey,
                 'Content-Type': 'application/octet-stream',
             },
 
@@ -125,6 +134,15 @@ export class WebCamCV extends Component {
 
     }
 
+    StartCapture = async () => {
+        this.setState({ captureOn: true });
+        this.interval = setInterval(() => this.capture(), 500);
+    }
+
+    StopCapture = () => {
+        this.setState({ captureOn: false });
+        clearInterval(this.interval);
+    }
 
     render() {
 
@@ -149,7 +167,10 @@ export class WebCamCV extends Component {
                             </td>
                             <td>
                                 <center>
-                                    <button onClick={this.capture}>Capture and analyze</button> <br></br>
+                                    {this.state.subscriptionKey ? < button onClick={this.capture}>Capture and analyze</button> : <p> Please enter subscription key to analyze</p>}
+                                    {this.state.subscriptionKey ?
+                                        [this.state.captureOn ? < button onClick={this.StopCapture}>Stop capture</button> : < button onClick={this.StartCapture}>Start capture</button> ]
+                                        : null}
                                 </center>
                             </td>
                             <td>
