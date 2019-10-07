@@ -1,5 +1,16 @@
-Instructions to run:
-1. The `ClientApp` folder is the base folder for the `create-react-app`. You can use any server of your choice. We will use ASP.NET.
-1. Navigate to the ClientApp folder on your terminal and install react-webcam with the line `npm install react-webcam` 
-1. Open the sln on Visual Stdui and add your subscription key
-1. Hit F5
+For the experienced React devloper:
+1. The ClientApp folder has all the components required to run this demo. It is the equivalent of the folder created by `create-react-app` where you can run your npm commands. You can use your favourite framework and IDE. 
+2. Go to step x below.
+
+For everyone else:
+1. This was tested for Visual Studio Enterprise 2019 version 16.3.2. Install it from here https://visualstudio.microsoft.com/downloads/. Ensure you have this workload checked during the installation process: ASP.NET and web development under the tab Web & Cloud. This should install ASP.NET core version 2.2 which this was tested on. You can install this from https://dotnet.microsoft.com/download/dotnet-core/2.2 
+1. Clone this repository and open it on Visual Studio
+
+If you have your own version of Visual Studio and ASP.NET Core and want to use that instead, 
+1. Create a new project in Visual Studio. This is an ASP.NET Core Web Application. Choose React.js when prompted for a template.
+1. Delete the ClientApp folder created and all its contents and move the ClientApp folder from this repository to its place
+
+1. Go to https://azure.microsoft.com/en-us/try/cognitive-services/my-apis/?api=computer-vision to get your Cognitive Services subscription key.
+1. Replace the '' in line in ClientApp\src\components\WebCamCV.js with the subscription key.
+1. Hit F5 or run IIS express 
+

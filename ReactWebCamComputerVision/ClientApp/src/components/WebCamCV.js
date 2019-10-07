@@ -15,7 +15,7 @@ export class WebCamCV extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            facingMode: "environment",
+            facingMode: "user",
             img: null,
             objects: null,
             tags: null,
@@ -23,7 +23,6 @@ export class WebCamCV extends Component {
         };
         this.makeblob = this.makeblob.bind(this);
         this.capture = this.capture.bind(this);
-        this.toggle = this.toggle.bind(this);
         this.updateCanvas = this.updateCanvas.bind(this);
     }
 
@@ -117,24 +116,15 @@ export class WebCamCV extends Component {
         }).then(response => response.json())
             .then(data => {
                 console.log(data.description);
-                this.setState({ tags: data.description.tags });
                 if (data.description.captions.length >= 1) {
                     this.setState({ caption: data.description.captions[0].text });
                     this.setState({ captionConfidence: data.description.captions[0].confidence.toFixed(3) });
+                    this.setState({ tags: data.description.tags });
                 }
             });
 
     }
 
-
-    toggle = () => {
-        if (this.state.facingMode == "user") {
-            this.setState({ facingMode: "environment" })
-            return
-        }
-        this.setState({ facingMode: "user" })
-        return
-    }
 
     render() {
 
@@ -160,7 +150,6 @@ export class WebCamCV extends Component {
                             <td>
                                 <center>
                                     <button onClick={this.capture}>Capture and analyze</button> <br></br>
-                                    <button onClick={this.toggle}>Toggle camera</button>
                                 </center>
                             </td>
                             <td>
@@ -174,7 +163,8 @@ export class WebCamCV extends Component {
                             <td></td>
                             <td>
                                 {this.state.caption ? <p>Caption: {this.state.caption} ({this.state.captionConfidence}) </p> : null}
-                                {this.state.tags ? <div> <h3> Tags </h3> <ul>
+                                {this.state.tags ?
+                                    <div> <h3> Tags </h3> <ul>
                                     {this.state.tags.map(function (tag, index) {
                                         return <li key={index}>{tag}</li>;
                                     })}
