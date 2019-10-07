@@ -13,6 +13,6 @@
 
 
 7. Go to [Azure Cognitive Services](https://azure.microsoft.com/en-us/try/cognitive-services/my-apis/?api=computer-vision) to get your Cognitive Services subscription key.
-8. Replace the '' in line in ClientApp\src\components\WebCamCV.js with the subscription key.
+8. Replace the '' in line 20 in [ClientApp\src\components\WebCamCV.js](./ClientApp/src/components/WebCamCV.js) with the subscription key.
 9. Hit F5 or run IIS express 
 
