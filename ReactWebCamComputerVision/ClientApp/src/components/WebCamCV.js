@@ -2,6 +2,7 @@
 
 import React, { Component } from 'react';
 import Webcam from 'react-webcam';
+import Sidebar from "react-sidebar";
 
 export class WebCamCV extends Component {
     static displayName = WebCamCV.name;
@@ -20,17 +21,21 @@ export class WebCamCV extends Component {
             subscriptionKey: '' , 
             /* For example, if your subscription key is ABCDE12345, the line should look like
              * subscriptionKey: 'ABCDE12345' , */
-
+            endpointRegion: 'westus', //change your endpoint region here
             facingMode: "user",
             img: null,
             objects: null,
             tags: null,
             caption: null,
             captureOn: false,
+            captureDelay: 500,
+            sidebarOpen: false,
         };
         this.makeblob = this.makeblob.bind(this);
         this.capture = this.capture.bind(this);
         this.updateCanvas = this.updateCanvas.bind(this);
+        this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
+        this.handleFormInput = this.handleFormInput.bind(this);
     }
 
     makeblob = function (dataURL) {
@@ -97,7 +102,7 @@ export class WebCamCV extends Component {
         this.setState({ img: image });
 
         //Object Detection
-        fetch('https://westus.api.cognitive.microsoft.com/vision/v2.0/detect/', {
+        fetch('https://' + this.state.endpointRegion + '.api.cognitive.microsoft.com/vision/v2.0/detect/', {
             method: 'POST',
             headers: {
                 'Ocp-Apim-Subscription-Key': this.state.subscriptionKey,
@@ -113,7 +118,7 @@ export class WebCamCV extends Component {
 
 
         //Image description
-        fetch('https://westus.api.cognitive.microsoft.com/vision/v2.0/describe/', {
+        fetch('https://' + this.state.endpointRegion + '.api.cognitive.microsoft.com/vision/v2.0/describe/', {
             method: 'POST',
             headers: {
                 'Ocp-Apim-Subscription-Key': this.state.subscriptionKey,
@@ -136,7 +141,7 @@ export class WebCamCV extends Component {
 
     StartCapture = async () => {
         this.setState({ captureOn: true });
-        this.interval = setInterval(() => this.capture(), 500);
+        this.interval = setInterval(() => this.capture(), this.state.captureDelay);
     }
 
     StopCapture = () => {
@@ -144,14 +149,76 @@ export class WebCamCV extends Component {
         clearInterval(this.interval);
     }
 
+    onSetSidebarOpen(open) {
+        this.setState({ sidebarOpen: open });
+    }
+
+    handleFormInput(event) {
+        const target = event.target;
+        const value = target.value;
+        const name = target.name;
+        this.setState({
+            [name]: value
+        });
+    }
+
     render() {
-
         return (
-            <div>
+            <Sidebar
+                sidebar={
+                    <div>
+                        <button style={{ float: 'right' }} onClick={() => this.onSetSidebarOpen(false)}>
+                            Close settings
+                        </button>
+                        <h4>Settings</h4>
 
-                <h1>In-browser webcam computer vision with Microsoft Azure Cognitive Services and React</h1>
+                        <form>
+                            <br />
+                            <label>
+                                Endpoint region:
+                                <input
+                                    name="endpointRegion"
+                                    type="text"
+                                    value={this.state.endpointRegion}
+                                    onChange={this.handleFormInput} />
+                            </label>
+                            <br />
+                            <label>
+                                Subscription API:
+                                <input
+                                    name="subscriptionKey"
+                                    type="password"
+                                    value={this.state.subscriptionKey}
+                                    onChange={this.handleFormInput} />
+                            </label>
+                            <br />
+                            <label>
+                                Capture delay in milliseconds:
+                                <input
+                                    name="captureDelay"
+                                    type="number"
+                                    value={this.state.captureDelay}
+                                    onChange={this.handleFormInput} />
+                            </label>
 
-                <p></p>
+                        </form>
+
+                    </div>
+                }
+                open={this.state.sidebarOpen}
+                onSetOpen={this.onSetSidebarOpen}
+                styles={{ sidebar: { background: "white" } }}
+                pullRight={true}
+            >
+
+
+                
+                <button style={{ float: 'right' }} onClick={() => this.onSetSidebarOpen(true)}>
+                    Open settings
+                </button>
+                <div style={{ display: 'inline-block', marginLeft: '10%' }}>
+                <h3>In-browser webcam computer vision with Microsoft Azure Cognitive Services and React</h3>
+                <br />
                 <table>
                     <tbody>
                         <tr>
@@ -166,36 +233,40 @@ export class WebCamCV extends Component {
                                 />
                             </td>
                             <td>
-                                <center>
-                                    {this.state.subscriptionKey ? < button onClick={this.capture}>Capture and analyze</button> : <p> Please enter subscription key to analyze</p>}
-                                    {this.state.subscriptionKey ?
-                                        [this.state.captureOn ? < button onClick={this.StopCapture}>Stop capture</button> : < button onClick={this.StartCapture}>Start capture</button> ]
-                                        : null}
-                                </center>
+
                             </td>
                             <td>
                                 <canvas ref={(canvas) => this.canvas = canvas} width="512" height="300" />
-                                
+
 
                             </td>
                         </tr>
                         <tr>
-                            <td></td>
+                                <td>
+                                    <center>
+                                        {this.state.subscriptionKey ? null : <p> Please enter subscription key to analyze</p>}
+
+                                        {this.state.subscriptionKey ?
+                                            [this.state.captureOn ? <div> <br /> <br /> < button key="stopCapture" style={{ width: '200px' }} onClick={this.StopCapture}>Stop capture</button> </div> : <div> < button key="captureOnce" style={{ width: '200px' }} onClick={this.capture}>Capture and analyze</button>  <br /> < button key="startCapture" style={{ width: '200px' }} onClick={this.StartCapture}>Start capture</button> </div>]
+                                            : null}
+                                    </center>
+                                </td>
                             <td></td>
                             <td>
-                                {this.state.caption ? <p>Caption: {this.state.caption} ({this.state.captionConfidence}) </p> : null}
+                                {this.state.caption ? <div> <h3>Caption </h3> <p> {this.state.caption} ({this.state.captionConfidence}) </p> </div> : null}
                                 {this.state.tags ?
                                     <div> <h3> Tags </h3> <ul>
-                                    {this.state.tags.map(function (tag, index) {
-                                        return <li key={index}>{tag}</li>;
-                                    })}
-                                </ul> </div> : null}
+                                        {this.state.tags.map(function (tag, index) {
+                                            return <li key={index}>{tag}</li>;
+                                        })}
+                                    </ul> </div> : null}
                             </td>
                         </tr>
                     </tbody>
-                </table>
+                    </table>
+                </div>
 
-          </div>
+            </Sidebar>
         );
   }
 }
