@@ -22,6 +22,7 @@ export class WebCamCV extends Component {
             /* For example, if your subscription key is ABCDE12345, the line should look like
              * subscriptionKey: 'ABCDE12345' , */
             endpointRegion: 'westus', //change your endpoint region here
+
             facingMode: "user",
             img: null,
             objects: null,
@@ -85,10 +86,10 @@ export class WebCamCV extends Component {
                 ctx.fillStyle = "rgba(255,255,255," + String(object.confidence) + ")";;
                 const textWidth = ctx.measureText(object.object + " (" + object.confidence + ")").width;
                 const textHeight = parseInt(font, 10); // base 10
-                ctx.fillRect(object.rectangle.x, object.rectangle.y, textWidth + 4, textHeight + 4);
+                ctx.fillRect(object.rectangle.x, object.rectangle.y - (textHeight + 4), textWidth + 4, textHeight + 4);
 
                 ctx.fillStyle = "rgb(0,0,0)";
-                ctx.fillText(object.object + " (" + object.confidence + ")", object.rectangle.x, object.rectangle.y);
+                ctx.fillText(object.object + " (" + object.confidence + ")", object.rectangle.x, (object.rectangle.y - textHeight - 2));
 
             });
         };
@@ -175,7 +176,7 @@ export class WebCamCV extends Component {
                         <form>
                             <br />
                             <label>
-                                Endpoint region:
+                                Endpoint  region:
                                 <input
                                     name="endpointRegion"
                                     type="text"
@@ -194,7 +195,7 @@ export class WebCamCV extends Component {
                             <br />
                             <label>
                                 Capture delay in milliseconds:
-                                <input
+                                <input style={{ width: '50px' }}
                                     name="captureDelay"
                                     type="number"
                                     value={this.state.captureDelay}
@@ -232,26 +233,24 @@ export class WebCamCV extends Component {
                                     videoConstraints={{ width: 1280, height: 720, facingMode: this.state.facingMode }}
                                 />
                             </td>
-                            <td>
 
-                            </td>
                             <td>
                                 <canvas ref={(canvas) => this.canvas = canvas} width="512" height="300" />
 
 
                             </td>
                         </tr>
-                        <tr>
+                        <tr style={{ verticalAlign: 'top' }}>
                                 <td>
                                     <center>
                                         {this.state.subscriptionKey ? null : <p> Please enter subscription key to analyze</p>}
 
                                         {this.state.subscriptionKey ?
-                                            [this.state.captureOn ? <div> <br /> <br /> < button key="stopCapture" style={{ width: '200px' }} onClick={this.StopCapture}>Stop capture</button> </div> : <div> < button key="captureOnce" style={{ width: '200px' }} onClick={this.capture}>Capture and analyze</button>  <br /> < button key="startCapture" style={{ width: '200px' }} onClick={this.StartCapture}>Start capture</button> </div>]
+                                            [this.state.captureOn ? <div>  <br /> < button key="stopCapture" style={{ width: '200px' }} onClick={this.StopCapture}>Stop capture</button> </div> : <div> < button key="captureOnce" style={{ width: '200px' }} onClick={this.capture}>Capture and analyze</button>  <br /> < button key="startCapture" style={{ width: '200px' }} onClick={this.StartCapture}>Start capture</button> </div>]
                                             : null}
                                     </center>
                                 </td>
-                            <td></td>
+
                             <td>
                                 {this.state.caption ? <div> <h3>Caption </h3> <p> {this.state.caption} ({this.state.captionConfidence}) </p> </div> : null}
                                 {this.state.tags ?
@@ -262,6 +261,9 @@ export class WebCamCV extends Component {
                                     </ul> </div> : null}
                             </td>
                         </tr>
+
+
+
                     </tbody>
                     </table>
                 </div>
