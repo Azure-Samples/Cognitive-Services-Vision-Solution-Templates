@@ -25,6 +25,7 @@ export class WebCamCV extends Component {
 
             facingMode: "user",
             img: null,
+            fetchTime: null,
             objects: null,
             tags: null,
             caption: null,
@@ -101,7 +102,7 @@ export class WebCamCV extends Component {
         const image = this.webcam.getScreenshot();
         const imageBlob = this.makeblob(image);
         this.setState({ img: image });
-
+        var t0 = performance.now();
         //Object Detection
         fetch('https://' + this.state.endpointRegion + '.api.cognitive.microsoft.com/vision/v2.0/detect/', {
             method: 'POST',
@@ -114,7 +115,8 @@ export class WebCamCV extends Component {
 
         }).then(response => response.json())
             .then(data => {
-                this.setState({ objects: data.objects });
+                var t1 = performance.now();
+                this.setState({ objects: data.objects, fetchTime: (t1 - t0).toFixed(3) });
             }).then(returnValue => this.updateCanvas());
 
 
@@ -246,7 +248,7 @@ export class WebCamCV extends Component {
                                         {this.state.subscriptionKey ? null : <p> Please enter subscription key to analyze</p>}
 
                                         {this.state.subscriptionKey ?
-                                            [this.state.captureOn ? <div>  <br /> < button key="stopCapture" style={{ width: '200px' }} onClick={this.StopCapture}>Stop capture</button> </div> : <div> < button key="captureOnce" style={{ width: '200px' }} onClick={this.capture}>Capture and analyze</button>  <br /> < button key="startCapture" style={{ width: '200px' }} onClick={this.StartCapture}>Start capture</button> </div>]
+                                            [this.state.captureOn ? <div key="captureOn">  <br /> < button key="stopCapture" style={{ width: '200px' }} onClick={this.StopCapture}>Stop capture</button> </div> : <div key="captureOff"> < button key="captureOnce" style={{ width: '200px' }} onClick={this.capture}>Capture and analyze</button>  <br /> < button key="startCapture" style={{ width: '200px' }} onClick={this.StartCapture}>Start capture</button> </div>]
                                             : null}
                                     </center>
                                 </td>
@@ -258,7 +260,12 @@ export class WebCamCV extends Component {
                                         {this.state.tags.map(function (tag, index) {
                                             return <li key={index}>{tag}</li>;
                                         })}
-                                    </ul> </div> : null}
+                                        </ul>
+                                    </div> : null
+                                    }
+
+                                {this.state.fetchTime ? <div> <h5>Fetch time </h5> <p> {this.state.fetchTime} milliseconds</p> </div> : null}
+
                             </td>
                         </tr>
 
