@@ -2,7 +2,8 @@
 
 import React, { Component } from 'react';
 import Webcam from 'react-webcam';
-import Sidebar from "react-sidebar";
+import Sidebar from 'react-sidebar';
+import { Button, ButtonGroup } from 'reactstrap';
 
 export class WebCamCV extends Component {
     static displayName = WebCamCV.name;
@@ -31,13 +32,14 @@ export class WebCamCV extends Component {
             caption: null,
             captureOn: false,
             captureDelay: 500,
-            sidebarOpen: false,
+            sidebarOpen: true,
         };
         this.makeblob = this.makeblob.bind(this);
         this.capture = this.capture.bind(this);
         this.updateCanvas = this.updateCanvas.bind(this);
         this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
         this.handleFormInput = this.handleFormInput.bind(this);
+        
     }
 
     makeblob = function (dataURL) {
@@ -156,6 +158,7 @@ export class WebCamCV extends Component {
         this.setState({ sidebarOpen: open });
     }
 
+
     handleFormInput(event) {
         const target = event.target;
         const value = target.value;
@@ -169,12 +172,13 @@ export class WebCamCV extends Component {
         return (
             <Sidebar
                 sidebar={
-                    <div>
-                        <button style={{ float: 'right' }} onClick={() => this.onSetSidebarOpen(false)}>
-                            Close settings
-                        </button>
-                        <h4>Settings</h4>
+                    <div style={{ display: 'inline-block', marginLeft: '10%' }}>
+                        <Button color="primary" size="lg" style={{ float: 'right', width: '100px' }} onClick={() => this.onSetSidebarOpen(false)}>
+                            Close
+                        </Button>
 
+                        <br />
+                        <h3>Settings</h3>
                         <form>
                             <br />
                             <label>
@@ -185,18 +189,18 @@ export class WebCamCV extends Component {
                                     value={this.state.endpointRegion}
                                     onChange={this.handleFormInput} />
                             </label>
-                            <br />
+                            <br /> <br />
                             <label>
-                                Subscription API:
+                                Subscription API key:
                                 <input
                                     name="subscriptionKey"
                                     type="password"
                                     value={this.state.subscriptionKey}
                                     onChange={this.handleFormInput} />
                             </label>
-                            <br />
+                            <br /> <br />
                             <label>
-                                Capture delay in milliseconds:
+                                Continuous analysis frequency (ms): <br />
                                 <input style={{ width: '50px' }}
                                     name="captureDelay"
                                     type="number"
@@ -210,46 +214,62 @@ export class WebCamCV extends Component {
                 }
                 open={this.state.sidebarOpen}
                 onSetOpen={this.onSetSidebarOpen}
-                styles={{ sidebar: { background: "white" } }}
+                styles={{ sidebar: { background: "white" , width: '300px' } }}
                 pullRight={true}
             >
 
 
                 
-                <button style={{ float: 'right' }} onClick={() => this.onSetSidebarOpen(true)}>
-                    Open settings
-                </button>
+                <Button color="primary" size="lg" style={{ float: 'right', width: '100px'}} onClick={() => this.onSetSidebarOpen(true)}>
+                    Settings
+                </Button>
+
                 <div style={{ display: 'inline-block', marginLeft: '10%' }}>
                 <h3>In-browser webcam computer vision with Microsoft Azure Cognitive Services and React</h3>
                 <br />
                 <table>
                     <tbody>
                         <tr>
-                            <td>
-                                <Webcam
-                                    audio={false}
-                                    height={290}
-                                    screenshotFormat="image/png"
-                                    width={512}
-                                    ref={this.setRef}
-                                    videoConstraints={{ width: 1280, height: 720, facingMode: this.state.facingMode }}
-                                />
+                            <td style={{ width: '620px' }}>
+                                <center>
+                                    <Webcam
+                                        audio={false}
+                                        height={292}
+                                        screenshotFormat="image/png"
+                                        width={512}
+                                        ref={this.setRef}
+                                        videoConstraints={{ width: 1280, height: 720, facingMode: this.state.facingMode }}
+                                    />
+                                </center>
                             </td>
 
-                            <td>
-                                <canvas ref={(canvas) => this.canvas = canvas} width="512" height="300" />
-
-
+                            <td style={{ width: '580px' }}>
+                                 <canvas ref={(canvas) => this.canvas = canvas} width="512" height="290" /> 
                             </td>
+
                         </tr>
                         <tr style={{ verticalAlign: 'top' }}>
-                                <td>
+                                <td >
                                     <center>
-                                        {this.state.subscriptionKey ? null : <p> Please enter subscription key to analyze</p>}
+                                        {this.state.subscriptionKey ? null : <p> Please set subscription key to analyze</p>}
+                                        
 
                                         {this.state.subscriptionKey ?
-                                            [this.state.captureOn ? <div key="captureOn">  <br /> < button key="stopCapture" style={{ width: '200px' }} onClick={this.StopCapture}>Stop capture</button> </div> : <div key="captureOff"> < button key="captureOnce" style={{ width: '200px' }} onClick={this.capture}>Capture and analyze</button>  <br /> < button key="startCapture" style={{ width: '200px' }} onClick={this.StartCapture}>Start capture</button> </div>]
+                                            [this.state.captureOn ?
+                                                <div key="captureOn">
+                                                    <ButtonGroup>
+                                                        < Button key="captureOnce" color="primary" style={{ width: '200px' }} onClick={this.capture} disabled >Analyze Single Frame</Button>
+                                                        < Button key="stopCapture" color="danger" style={{ width: '200px' }} onClick={this.StopCapture} active>Stop continuous analysis</Button>
+                                                    </ButtonGroup>
+                                                </div> :
+                                                <div key="captureOff">
+                                                    <ButtonGroup>
+                                                        < Button key="captureOnce" color="primary" style={{ width: '200px' }} onClick={this.capture}>Analyze Single Frame</Button> 
+                                                        < Button key="startCapture" color="success" style={{ width: '200px' }} onClick={this.StartCapture}>Analyze Continuously</Button>
+                                                    </ButtonGroup>
+                                                </div>]
                                             : null}
+
                                     </center>
                                 </td>
 
@@ -264,7 +284,7 @@ export class WebCamCV extends Component {
                                     </div> : null
                                     }
 
-                                {this.state.fetchTime ? <div> <h5>Fetch time </h5> <p> {this.state.fetchTime} milliseconds</p> </div> : null}
+                                    {this.state.fetchTime ? <div> <p> <b>Latency: </b>  {this.state.fetchTime} milliseconds</p> </div> : null}
 
                             </td>
                         </tr>
