@@ -5,4 +5,4 @@ Here you will find a set of templates that illustrates how to solve some typical
 
 | Folder | Description |
 |-------------|-------------|
-| [ReactWebCamComputerVision](/ReactWebCamComputerVision) | Object detection and image description on the browser using the webcam and the Computer Vision REST API |
+| [ReactWebCamComputerVision](./ReactWebCamComputerVision) | Object detection and image description on the browser using the webcam and the Computer Vision REST API |
