@@ -4,6 +4,8 @@ import React, { Component } from 'react';
 import Webcam from 'react-webcam';
 import Sidebar from 'react-sidebar';
 import { Button, ButtonGroup } from 'reactstrap';
+import Switch from 'react-switch';
+
 
 export class WebCamCV extends Component {
     static displayName = WebCamCV.name;
@@ -39,7 +41,8 @@ export class WebCamCV extends Component {
         this.updateCanvas = this.updateCanvas.bind(this);
         this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
         this.handleFormInput = this.handleFormInput.bind(this);
-        
+        this.handleSwitchChange = this.handleSwitchChange.bind(this);
+
     }
 
     makeblob = function (dataURL) {
@@ -168,6 +171,17 @@ export class WebCamCV extends Component {
         });
     }
 
+    handleSwitchChange(captureOn) {
+        this.setState({ captureOn });
+        if (captureOn) {
+            this.interval = setInterval(() => this.capture(), this.state.captureDelay);
+        }
+        else {
+            clearInterval(this.interval);
+        }
+    }
+
+
     render() {
         return (
             <Sidebar
@@ -227,6 +241,7 @@ export class WebCamCV extends Component {
                 <div style={{ display: 'inline-block', marginLeft: '10%' }}>
                 <h3>In-browser webcam computer vision with Microsoft Azure Cognitive Services and React</h3>
                 <br />
+
                 <table>
                     <tbody>
                         <tr>
@@ -253,20 +268,22 @@ export class WebCamCV extends Component {
                                     <center>
                                         {this.state.subscriptionKey ? null : <p> Please set subscription key to analyze</p>}
                                         
-
+                                        <br />
                                         {this.state.subscriptionKey ?
                                             [this.state.captureOn ?
                                                 <div key="captureOn">
-                                                    <ButtonGroup>
-                                                        < Button key="captureOnce" color="primary" style={{ width: '200px' }} onClick={this.capture} disabled >Analyze Single Frame</Button>
-                                                        < Button key="stopCapture" color="danger" style={{ width: '200px' }} onClick={this.StopCapture} active>Stop continuous analysis</Button>
-                                                    </ButtonGroup>
+                                                    < Button key="captureOnce" color="primary" style={{ width: '200px' }} onClick={this.capture} disabled >Analyze Single Frame</Button>
+                                                    <label style={{ float: 'right', marginRight: 50 }}>
+                                                        <span style={{ fontSize: 20, verticalAlign: 'top' }}>Analyze Continuously {}</span>
+                                                        <Switch onChange={this.handleSwitchChange} checked={this.state.captureOn} />
+                                                    </label>
                                                 </div> :
                                                 <div key="captureOff">
-                                                    <ButtonGroup>
                                                         < Button key="captureOnce" color="primary" style={{ width: '200px' }} onClick={this.capture}>Analyze Single Frame</Button> 
-                                                        < Button key="startCapture" color="success" style={{ width: '200px' }} onClick={this.StartCapture}>Analyze Continuously</Button>
-                                                    </ButtonGroup>
+                                                    <label style={{ float: 'right', marginRight: 50}}>
+                                                        <span style={{ fontSize: 20, verticalAlign: 'top' }}>Analyze Continuously {  }</span>
+                                                        <Switch onChange={this.handleSwitchChange} checked={this.state.captureOn} />
+                                                    </label>
                                                 </div>]
                                             : null}
 
@@ -288,9 +305,6 @@ export class WebCamCV extends Component {
 
                             </td>
                         </tr>
-
-
-
                     </tbody>
                     </table>
                 </div>
