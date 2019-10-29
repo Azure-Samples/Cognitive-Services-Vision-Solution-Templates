@@ -1,0 +1,30 @@
+﻿<ContentDialog
+    x:Class="DigitalAssetManagementTemplate.SettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:DigitalAssetManagementTemplate"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Enter your settings"
+    PrimaryButtonText="OK"
+    SecondaryButtonText="Cancel"
+    DefaultButton="Primary" PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
+    <Grid Margin="20">
+        <StackPanel Spacing="35">
+            <StackPanel>
+                <PasswordBox x:Name="CognitiveApi" Password="{x:Bind SettingsHelper.CognitiveServiceApiKey}">
+                    <PasswordBox.Header>
+                        <TextBlock>
+                            Cognitive service api key
+                            <Hyperlink NavigateUri="https://ms.portal.azure.com/#create/Microsoft.CognitiveServicesAllInOne">(create)</Hyperlink>
+                        </TextBlock>
+                    </PasswordBox.Header>
+                </PasswordBox>
+                <TextBlock x:Name="CognitiveApiError" Foreground="Red" TextWrapping="WrapWholeWords" Visibility="Collapsed"/>
+            </StackPanel>
+            <TextBox x:Name="ApiEndpoint" Header="Cognitive service endpoint" Text="{x:Bind SettingsHelper.CognitiveServiceEndpoint}" />
+            <CheckBox x:Name="Age" Content="Show age and gender information" IsChecked="{x:Bind SettingsHelper.ShowAgeAndGender}" />
+        </StackPanel>
+    </Grid>
+</ContentDialog>
