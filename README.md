@@ -1,6 +1,6 @@
 # Computer Vision Solution Templates
 
-Here you'll find templates that illustrate how to use Azure's Computer Vision and Custom Vision services to implement some common digital asset management (DAM) scenarios.
+Here you'll find templates that illustrate how to use Azure's Computer Vision and Custom Vision services to implement some common computer vision scenarios.
 
 ## Content
 
