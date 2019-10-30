@@ -92,7 +92,7 @@ namespace DigitalAssetManagementTemplate
             ToastTemplateType toastTemplate = ToastTemplateType.ToastText02;
             XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplate);
             XmlNodeList toastTextElements = toastXml.GetElementsByTagName("text");
-            toastTextElements[0].AppendChild(toastXml.CreateTextNode("Digital Assistant Management"));
+            toastTextElements[0].AppendChild(toastXml.CreateTextNode("Digital Asset Management"));
             toastTextElements[1].AppendChild(toastXml.CreateTextNode(errorMessage));
 
             ToastNotification toast = new ToastNotification(toastXml);

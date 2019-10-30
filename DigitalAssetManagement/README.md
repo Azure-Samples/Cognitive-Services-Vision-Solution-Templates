@@ -43,7 +43,7 @@ Once a folder or storage collection is selected the images will be processed for
 
 ## How it works
 
-Each image from a local folder or a blob collection are processed through the Computer Vision API and/or the Face API, depending on which services you elect to use.  The results are cached in the applications local storage using JSON file format.  The images themselves are never cached.  The JSON file contains the output from the API for each image, minus some extracted insights not used by this demo.
+Each image from a local folder or a blob collection is processed through the Computer Vision API and/or the Face API, depending on which services you elect to use.  The results are cached in the applications local storage using JSON file format.  The images themselves are never cached.  The JSON file contains the output from the API for each image, minus some extracted insights not used by this demo.
 
 Each time the JSON file is loaded it is used to create a list of filters over the images.  These filters, along with the associated images are displayed in the UI.  When a filter is selected, images matching that filter are added to the image display.  If no filters are selected, all images are displayed.
 
