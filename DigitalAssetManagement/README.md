@@ -14,14 +14,14 @@ This sample illustrates how Computer Vision can add a layer of insights to a col
 ## Source Code Structure
 | File | Description |
 |-------------|-------------|
-| [Views\DigitalAssetManagement\DigitalAssetManagementPage.xaml](DigitalAssetManagement/Views/DigitalAssetManagement/DigitalAssetManagementPage.xaml) | Main XAML for the solution template. It displays the images along with its associated filters.  It also contains the UI to manage your cached insights extracted from your images.|
-| [Views\DigitalAssetManagement\DigitalAssetManagementPage.xaml.cs](DigitalAssetManagement/Views/DigitalAssetManagement/DigitalAssetManagementPage.xaml.cs) | Code behind for the XAML UI. It contains basic support for the UI.  It also hosts an instance of a FileViewModel, your current image insights and ImageProcesser use to run the demo.|
-| [Views\DigitalAssetManagement\ImageInsights.cs](DigitalAssetManagement/Views/DigitalAssetManagement/ImageInsights.cs) | POCO object representing insights extracted from each of your images.|
-| [Views\DigitalAssetManagement\ImageInsightsViewModel.cs](DigitalAssetManagement/Views/DigitalAssetManagement/ImageInsightsViewModel.cs) | A wrapper around the ImageInsights object to support databinding to the UI and filtering the image collection.|
-| [Views\DigitalAssetManagement\ImageProcessor.cs](DigitalAssetManagement/Views/DigitalAssetManagement/ImageProcessor.cs) | Uses your Azure Cognitive Service to extract ImageInsights from your images.|
-| [Views\DigitalAssetManagement\FilesViewModel.cs](DigitalAssetManagement/Views/DigitalAssetManagement/FilesViewModel.cs) | CRUD opporation for ImageInsights.  Stores them in json format within the applications local storage.|
-| [SettingsHelper.cs](DigitalAssetManagement/SettingsHelper.cs) | Stores your Azure key and other settings in the application local storage.  Also configures service helpers to use your Azure key.|
-| [AppInsightsHelper.cs](DigitalAssetManagement/AppInsightsHelper.cs) | Can be used to track telemetry from the demo.|
+| [Views\DigitalAssetManagement\DigitalAssetManagementPage.xaml](Digital%20Asset%20Management/Views/DigitalAssetManagement/DigitalAssetManagementPage.xaml) | Main XAML for the solution template. It displays the images along with its associated filters.  It also contains the UI to manage your cached insights extracted from your images.|
+| [Views\DigitalAssetManagement\DigitalAssetManagementPage.xaml.cs](Digital%20Asset%20Management/Views/DigitalAssetManagement/DigitalAssetManagementPage.xaml.cs) | Code behind for the XAML UI. It contains basic support for the UI.  It also hosts an instance of a FileViewModel, your current image insights and ImageProcesser use to run the demo.|
+| [Views\DigitalAssetManagement\ImageInsights.cs](Digital%20Asset%20Management/Views/DigitalAssetManagement/ImageInsights.cs) | POCO object representing insights extracted from each of your images.|
+| [Views\DigitalAssetManagement\ImageInsightsViewModel.cs](Digital%20Asset%20Management/Views/DigitalAssetManagement/ImageInsightsViewModel.cs) | A wrapper around the ImageInsights object to support databinding to the UI and filtering the image collection.|
+| [Views\DigitalAssetManagement\ImageProcessor.cs](Digital%20Asset%20Management/Views/DigitalAssetManagement/ImageProcessor.cs) | Uses your Azure Cognitive Service to extract ImageInsights from your images.|
+| [Views\DigitalAssetManagement\FilesViewModel.cs](Digital%20Asset%20Management/Views/DigitalAssetManagement/FilesViewModel.cs) | CRUD opporation for ImageInsights.  Stores them in json format within the applications local storage.|
+| [SettingsHelper.cs](Digital%20Asset%20Management/SettingsHelper.cs) | Stores your Azure key and other settings in the application local storage.  Also configures service helpers to use your Azure key.|
+| [AppInsightsHelper.cs](Digital%20Asset%20Management/AppInsightsHelper.cs) | Can be used to track telemetry from the demo.|
 | [ServiceHelpers\FaceListManager.cs](ServiceHelpers/FaceListManager.cs) | Azure service helper to identify unique faces.|
 | [ServiceHelpers\FaceServiceHelper.cs](ServiceHelpers/FaceServiceHelper.cs) | Azure service helper for the Face API.|
 | [ServiceHelpers\VisionServiceHelper.cs](ServiceHelpers/VisionServiceHelper.cs) | Azure service helper for the Vision API.|
