@@ -125,7 +125,7 @@
     <Compile Include="FaceServiceHelper.cs" />
     <Compile Include="ImageAnalyzer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TelemetryHelper.cs" />
+    <Compile Include="ErrorTrackingHelper.cs" />
     <Compile Include="VisionServiceHelper.cs" />
     <EmbeddedResource Include="Properties\ServiceHelpers.rd.xml" />
   </ItemGroup>

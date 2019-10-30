@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace ServiceHelpers
 {
-    public static class TelemetryHelper
+    public static class ErrorTrackingHelper
     {
         // callbacks for exception tracking
         public static Action<Exception, string> TrackException { get; set; }

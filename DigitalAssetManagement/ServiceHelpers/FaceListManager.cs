@@ -37,7 +37,7 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Error resetting face lists");
+                ErrorTrackingHelper.TrackException(e, "Error resetting face lists");
             }
         }
 
@@ -55,7 +55,7 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Face API GetFaceListsAsync error");
+                ErrorTrackingHelper.TrackException(e, "Face API GetFaceListsAsync error");
             }
         }
 
@@ -108,7 +108,7 @@ namespace ServiceHelpers
                 {
                     // Catch errors with individual face lists so we can continue looping through all lists. Maybe an answer will come from
                     // another one.
-                    TelemetryHelper.TrackException(e, "Face API FindSimilarAsync error");
+                    ErrorTrackingHelper.TrackException(e, "Face API FindSimilarAsync error");
                 }
             }
 

@@ -82,7 +82,6 @@ namespace ServiceHelpers
                 {
                     Endpoint = ApiEndpoint
                 };
-            faceClient.HttpClient.DefaultRequestHeaders.Add("ms-retain-telemetry-image", "false");
         }
 
         private static async Task<TResponse> RunTaskWithAutoRetryOnQuotaLimitExceededError<TResponse>(Func<Task<TResponse>> action)
@@ -101,7 +100,7 @@ namespace ServiceHelpers
                 }
                 catch (APIErrorException exception) when (exception.Response.StatusCode == (System.Net.HttpStatusCode)429 && retriesLeft > 0)
                 {
-                    TelemetryHelper.TrackException(exception, "Face API throttling error");
+                    ErrorTrackingHelper.TrackException(exception, "Face API throttling error");
                     if (retriesLeft == 1 && Throttled != null)
                     {
                         Throttled();
@@ -379,7 +378,7 @@ namespace ServiceHelpers
             }
             catch (Exception ex)
             {
-                TelemetryHelper.TrackException(ex, "Face API: Update PersonGroup using new recognition model error");
+                ErrorTrackingHelper.TrackException(ex, "Face API: Update PersonGroup using new recognition model error");
                 progress?.Report(new FaceIdentificationModelUpdateStatus { State = FaceIdentificationModelUpdateState.Error });
             }
         }

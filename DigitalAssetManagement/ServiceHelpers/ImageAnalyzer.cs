@@ -128,13 +128,13 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Face API DetectAsync error");
+                ErrorTrackingHelper.TrackException(e, "Face API DetectAsync error");
 
                 this.DetectedFaces = Enumerable.Empty<DetectedFace>();
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(e, "Face API failed.");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Face API failed.");
                 }
             }
         }
@@ -156,13 +156,13 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Vision API DescribeAsync error");
+                ErrorTrackingHelper.TrackException(e, "Vision API DescribeAsync error");
 
                 this.AnalysisResult = new ImageAnalysis();
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(e, "Vision API failed.");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Vision API failed.");
                 }
             }
         }
@@ -185,13 +185,13 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Vision API AnalyzeImageAsync error");
+                ErrorTrackingHelper.TrackException(e, "Vision API AnalyzeImageAsync error");
 
                 this.AnalysisResult = new ImageAnalysis();
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(e, "Vision API failed.");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Vision API failed.");
                 }
             }
         }
@@ -222,13 +222,13 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Vision API AnalyzeImageAsync error");
+                ErrorTrackingHelper.TrackException(e, "Vision API AnalyzeImageAsync error");
 
                 this.AnalysisResult = new ImageAnalysis();
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(e, "Vision API failed.");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Vision API failed.");
                 }
             }
         }
@@ -248,13 +248,13 @@ namespace ServiceHelpers
             }
             catch (Exception ex)
             {
-                TelemetryHelper.TrackException(ex, "Vision API RecognizeTextAsync error");
+                ErrorTrackingHelper.TrackException(ex, "Vision API RecognizeTextAsync error");
 
                 this.TextOperationResult = new TextOperationResult();
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(ex, "Vision API failed.");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(ex, "Vision API failed.");
                 }
             }
         }
@@ -332,11 +332,11 @@ namespace ServiceHelpers
             {
                 // Catch errors with individual groups so we can continue looping through all groups. Maybe an answer will come from
                 // another one.
-                TelemetryHelper.TrackException(e, "Face API IdentifyAsync error");
+                ErrorTrackingHelper.TrackException(e, "Face API IdentifyAsync error");
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(e, "Failure identifying faces");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Failure identifying faces");
                 }
             }
             return new List<IdentifyResult>();
@@ -373,11 +373,11 @@ namespace ServiceHelpers
                 }
                 catch (Exception e)
                 {
-                    TelemetryHelper.TrackException(e, "FaceListManager.FindSimilarPersistedFaceAsync error");
+                    ErrorTrackingHelper.TrackException(e, "FaceListManager.FindSimilarPersistedFaceAsync error");
 
                     if (this.ShowDialogOnFaceApiErrors)
                     {
-                        await TelemetryHelper.GenericApiCallExceptionHandler(e, "Failure finding similar faces");
+                        await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Failure finding similar faces");
                     }
                 }
             }
@@ -405,11 +405,11 @@ namespace ServiceHelpers
             }
             catch (Exception e)
             {
-                TelemetryHelper.TrackException(e, "Face API GetPersonGroupsAsync error");
+                ErrorTrackingHelper.TrackException(e, "Face API GetPersonGroupsAsync error");
 
                 if (this.ShowDialogOnFaceApiErrors)
                 {
-                    await TelemetryHelper.GenericApiCallExceptionHandler(e, "Failure getting PersonGroups");
+                    await ErrorTrackingHelper.GenericApiCallExceptionHandler(e, "Failure getting PersonGroups");
                 }
             }
             return personGroups;

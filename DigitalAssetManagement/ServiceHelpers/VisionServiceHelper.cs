@@ -68,7 +68,6 @@ namespace ServiceHelpers
                 {
                     Endpoint = ApiEndpoint
                 };
-            client.HttpClient.DefaultRequestHeaders.Add("ms-retain-telemetry-image", "false");
         }
 
         private static async Task<TResponse> RunTaskWithAutoRetryOnQuotaLimitExceededError<TResponse>(Func<Task<TResponse>> action)
@@ -87,7 +86,7 @@ namespace ServiceHelpers
                 }
                 catch (ComputerVisionErrorException exception) when (exception.Response?.StatusCode == (System.Net.HttpStatusCode)429 && retriesLeft > 0)
                 {
-                    TelemetryHelper.TrackException(exception, "Vision API throttling error");
+                    ErrorTrackingHelper.TrackException(exception, "Vision API throttling error");
                     if (retriesLeft == 1 && Throttled != null)
                     {
                         Throttled();

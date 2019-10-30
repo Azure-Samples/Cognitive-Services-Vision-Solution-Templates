@@ -1,4 +1,5 @@
 ﻿using DigitalAssetManagementTemplate.Views.DigitalAssetManagement;
+using ServiceHelpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,8 +7,10 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Data.Xml.Dom;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -67,6 +70,13 @@ namespace DigitalAssetManagementTemplate
                     //push settings
                     SettingsHelper.Instance.PushSettingsToServices();
 
+                    // callbacks for core library
+                    FaceServiceHelper.Throttled = () => ShowToastNotification("The Face API is throttling your requests. Consider upgrading to a Premium Key.");
+                    VisionServiceHelper.Throttled = () => ShowToastNotification("The Vision API is throttling your requests. Consider upgrading to a Premium Key.");
+
+                    ErrorTrackingHelper.TrackException = AppInsightsHelper.TrackException;
+                    ErrorTrackingHelper.GenericApiCallExceptionHandler = Util.GenericApiCallExceptionHandler;
+
                     // When the navigation stack isn't restored navigate to the first page,
                     // configuring the new page by passing required information as a navigation
                     // parameter
@@ -75,6 +85,18 @@ namespace DigitalAssetManagementTemplate
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+        }
+
+        private static void ShowToastNotification(string errorMessage)
+        {
+            ToastTemplateType toastTemplate = ToastTemplateType.ToastText02;
+            XmlDocument toastXml = ToastNotificationManager.GetTemplateContent(toastTemplate);
+            XmlNodeList toastTextElements = toastXml.GetElementsByTagName("text");
+            toastTextElements[0].AppendChild(toastXml.CreateTextNode("Digital Assistant Management"));
+            toastTextElements[1].AppendChild(toastXml.CreateTextNode(errorMessage));
+
+            ToastNotification toast = new ToastNotification(toastXml);
+            ToastNotificationManager.CreateToastNotifier().Show(toast);
         }
 
         /// <summary>
