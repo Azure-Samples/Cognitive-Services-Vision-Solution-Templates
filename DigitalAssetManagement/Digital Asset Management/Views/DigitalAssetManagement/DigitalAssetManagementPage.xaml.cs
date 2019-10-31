@@ -56,10 +56,13 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 await new MessageDialog("Missing Face or Vision API Key. Please enter a key in the Settings page.", "Missing API Key").ShowAsync();
             }
 
-            base.OnNavigatedTo(e);
+            FaceListManager.FaceListsUserDataFilter = "DigitalAssetManagement";
+            await FaceListManager.Initialize();
 
             //load files
             await FileManager.LoadFilesAsync();
+
+            base.OnNavigatedTo(e);
         }
 
         protected override async void OnNavigatingFrom(NavigatingCancelEventArgs e)
