@@ -30,7 +30,7 @@ This sample illustrates how Computer Vision can add a layer of insights to a col
 ## Setup
 
 1. Clone or download this repository
-2. Open the solution IoTVisualAlerts.sln in Visual Studio
+2. Open the solution DigitalAssetManagement.sln in Visual Studio
 3. Run the solution.
 
 ## Running the solution
