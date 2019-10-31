@@ -8,3 +8,4 @@ Here you'll find templates that illustrate how to use Azure's Computer Vision an
 |-------------|-------------|
 | [IoTVisualAlerts](/IoTVisualAlerts) | Use Custom Vision and IoT Hub to trigger visual alerts in real-time from any Windows 10 device with a camera.|
 | [InBrowserComputerVision](/InBrowserComputerVision) | Use Computer Vision and Custom Vision to run image analysis, classification and object detection in a browser using React.|
+| [Digital Asset Management](/DigitalAssetManagement) | Showcases how Computer Vision can add a layer of insights to a collection of images|
