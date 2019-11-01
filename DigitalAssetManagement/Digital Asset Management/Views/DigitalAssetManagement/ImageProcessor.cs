@@ -236,7 +236,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 
         public override string GetName()
         {
-            return Path.LocalPath.Replace(@"/",string.Empty);
+            return Uri.UnescapeDataString(Path.LocalPath.Replace(@"/",string.Empty));
         }
     }
 
@@ -267,7 +267,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 
         public override string GetName()
         {
-            return Path.Segments.Last();
+            return Uri.UnescapeDataString(Path.Segments.Last());
         }
     }
 

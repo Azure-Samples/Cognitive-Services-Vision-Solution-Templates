@@ -26,9 +26,9 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         public ObservableCollection<ImageInsightsViewModel> FilteredResults { get; set; } = new ObservableCollection<ImageInsightsViewModel>();
         public FilterCollection ActiveFilters { get; set; } = new FilterCollection() { Name = "Filters" };
         public FilterCollection TagFilters { get; set; } = new FilterCollection() { Name = "Tags" };
-        public FilterCollection FaceFilters { get; set; } = new FilterCollection() { Name = "Faces" };
+        public FilterCollection FaceFilters { get; set; } = new FilterCollection() { Name = "Unique faces" };
         public FilterCollection EmotionFilters { get; set; } = new FilterCollection() { Name = "Emotion" };
-        public FilterCollection ObjectFilters { get; set; } = new FilterCollection() { Name = "Objects" };
+        public FilterCollection ObjectFilters { get; set; } = new FilterCollection() { Name = "Detected objects" };
         public FilterCollection LandmarkFilters { get; set; } = new FilterCollection() { Name = "Landmarks" };
         public FilterCollection CelebrityFilters { get; set; } = new FilterCollection() { Name = "Celebrities" };
         public FilterCollection BrandFilters { get; set; } = new FilterCollection() { Name = "Brands" };
@@ -78,12 +78,12 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             //select filter words
             var words = text.Trim().Split(' ');
             var hasChanged = false;
-            foreach (var filter in WordFilters.Where(i => i.IsChecked && !words.Contains((string)i.Key)))
+            foreach (var filter in WordFilters.Where(i => i.IsChecked && !words.Contains((string)i.Key, StringComparer.OrdinalIgnoreCase)))
             {
                 filter.IsChecked = false;
                 hasChanged = true;
             }
-            foreach (var filter in WordFilters.Where(i => words.Contains((string)i.Key)))
+            foreach (var filter in WordFilters.Where(i => words.Contains((string)i.Key, StringComparer.OrdinalIgnoreCase)))
             {
                 filter.IsChecked = true;
                 hasChanged = true;
@@ -113,7 +113,8 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 }
 
                 var items = reordered.ToList();
-                filter.AddRemoveRange(items);
+                filter.Clear();
+                filter.AddRange(items);
             }
         }
 
@@ -130,6 +131,9 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 bitmapImage.UriSource = insights.ImageUri;
             }
 
+            //load smaller image - for performace
+            bitmapImage.DecodePixelHeight = 270;
+
             // Create the view models
             ImageInsightsViewModel insightsViewModel = new ImageInsightsViewModel() { Insights = insights, ImageSource = bitmapImage };
 
@@ -142,12 +146,28 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             //faces
             foreach (var entity in insights.FaceInsights ?? Array.Empty<FaceInsights>())
             {
-                var filter = AddFilter(FaceFilters, entity, entity.UniqueFaceId, insightsViewModel, bitmapImage, entity.FaceRectangle.ToRect().Inflate(2));
+                var key = entity.UniqueFaceId == Guid.Empty ? Guid.NewGuid() : entity.UniqueFaceId;
+                var imageScale = bitmapImage.PixelHeight < bitmapImage.DecodePixelHeight ? 1d : (double)bitmapImage.DecodePixelHeight / (double)bitmapImage.PixelHeight;
+                var filter = AddFilter(FaceFilters, entity, key, insightsViewModel, bitmapImage, entity.FaceRectangle.ToRect().Scale(imageScale).Inflate(2));
+
+                //rescale face rect if image has been rescaled
+                if (filter.Count == 1 && bitmapImage.PixelHeight == 0)
+                {
+                    bitmapImage.ImageOpened += (sender, e) =>
+                    {
+                        var bitmap = sender as BitmapImage;
+                        if (bitmap.DecodePixelHeight != 0 && bitmap.DecodePixelHeight < bitmap.PixelHeight)
+                        {
+                            var imageFilter = filter as ImageFilterViewModel;
+                            imageFilter.ImageCrop = entity.FaceRectangle.ToRect().Scale((double)bitmap.DecodePixelHeight / (double)bitmap.PixelHeight).Inflate(2);
+                        }
+                    };
+                }
             }
 
             //emotions
-            var distinctEmotions = insights.FaceInsights?.Select(i => Util.EmotionToRankedList(i.FaceAttributes.Emotion).First().Key).Distinct().ToArray() ?? Array.Empty<string>();
-            foreach (var entity in distinctEmotions)
+            insightsViewModel.Emotions = insights.FaceInsights?.Select(i => Util.EmotionToRankedList(i.FaceAttributes.Emotion).First().Key).Distinct().ToArray() ?? Array.Empty<string>();
+            foreach (var entity in insightsViewModel.Emotions)
             {
                 AddFilter(EmotionFilters, entity, entity, insightsViewModel);
             }
@@ -177,7 +197,8 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             }
 
             //moderation
-            foreach (var entity in GetAdultFlags(insights.VisionInsights?.Adult))
+            insightsViewModel.Moderation = GetAdultFlags(insights.VisionInsights?.Adult).ToArray();
+            foreach (var entity in insightsViewModel.Moderation)
             {
                 AddFilter(ModerationFilters, entity, entity, insightsViewModel);
                 insightsViewModel.BlurImage = true; //set blur flag
@@ -190,45 +211,50 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             }
 
             //color
-            foreach (var entity in GetColorFlags(insights.VisionInsights?.Color))
+            insightsViewModel.Color = GetColorFlags(insights.VisionInsights?.Color).ToArray();
+            foreach (var entity in insightsViewModel.Color)
             {
                 AddFilter(ColorFilters, entity, entity, insightsViewModel);
             }
 
             //orientation
-            var orientation = GetOrientation(insights.VisionInsights?.Metadata);
-            if (orientation != null)
+            insightsViewModel.Orientation = GetOrientation(insights.VisionInsights?.Metadata);
+            if (insightsViewModel.Orientation != null)
             {
-                AddFilter(OrientationFilters, orientation, orientation, insightsViewModel);
+                AddFilter(OrientationFilters, insightsViewModel.Orientation, insightsViewModel.Orientation, insightsViewModel);
             }
 
             //image type
-            foreach (var entity in GetImageTypeFlags(insights.VisionInsights?.ImageType))
+            insightsViewModel.ImageType = GetImageTypeFlags(insights.VisionInsights?.ImageType).ToArray();
+            foreach (var entity in insightsViewModel.ImageType)
             {
                 AddFilter(ImageTypeFilters, entity, entity, insightsViewModel);
             }
 
             //size
-            var size = GetSize(insights.VisionInsights?.Metadata);
-            if (size != null)
+            insightsViewModel.Size = GetSize(insights.VisionInsights?.Metadata);
+            if (insightsViewModel.Size != null)
             {
-                AddFilter(SizeFilters, size, size, insightsViewModel);
+                AddFilter(SizeFilters, insightsViewModel.Size, insightsViewModel.Size, insightsViewModel);
             }
 
             //People
-            foreach (var entity in GetPeopleFlags(insights.VisionInsights?.Objects, insights.FaceInsights))
+            insightsViewModel.People = GetPeopleFlags(insights.VisionInsights?.Objects, insights.FaceInsights).ToArray();
+            foreach (var entity in insightsViewModel.People)
             {
                 AddFilter(PeopleFilters, entity, entity, insightsViewModel);
             }
 
             //face attributes
-            foreach (var entity in GetFaceAttributesFlags(insights.FaceInsights))
+            insightsViewModel.FaceAttributes = GetFaceAttributesFlags(insights.FaceInsights).ToArray();
+            foreach (var entity in insightsViewModel.FaceAttributes)
             {
                 AddFilter(FaceAttributesFilters, entity, entity, insightsViewModel);
             }
 
             //face qualtity
-            foreach (var entity in GetFaceQualityFlags(insights.FaceInsights))
+            insightsViewModel.FaceQualtity = GetFaceQualityFlags(insights.FaceInsights).ToArray();
+            foreach (var entity in insightsViewModel.FaceQualtity)
             {
                 AddFilter(FaceQualityFilters, entity, entity, insightsViewModel);
             }
@@ -236,13 +262,15 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             if (SettingsHelper.Instance.ShowAgeAndGender) //only if age and gender is allowed
             {
                 //Age
-                foreach (var entity in GetAgeFlags(insights.FaceInsights))
+                insightsViewModel.Age = GetAgeFlags(insights.FaceInsights).ToArray();
+                foreach (var entity in insightsViewModel.Age)
                 {
                     AddFilter(AgeFilters, entity, entity, insightsViewModel);
                 }
 
                 //Gender
-                foreach (var entity in GetGenderFlags(insights.FaceInsights))
+                insightsViewModel.Gender = GetGenderFlags(insights.FaceInsights).ToArray();
+                foreach (var entity in insightsViewModel.Gender)
                 {
                     AddFilter(GenderFilters, entity, entity, insightsViewModel);
                 }
@@ -618,6 +646,17 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         public ImageInsights Insights { get; set; }
         public ImageSource ImageSource { get; set; }
         public bool BlurImage { get; set; }
+        public string[] Emotions { get; set; }
+        public string[] Moderation { get; set; }
+        public string[] Color { get; set; }
+        public string Orientation { get; set; }
+        public string[] ImageType { get; set; }
+        public string Size { get; set; }
+        public string[] People { get; set; }
+        public string[] FaceAttributes { get; set; }
+        public string[] FaceQualtity { get; set; }
+        public string[] Age { get; set; }
+        public string[] Gender { get; set; }
     }
 
     public class TextFilterViewModel : INotifyPropertyChanged
@@ -637,8 +676,8 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             get => _isChecked;
             set 
             { 
-                _isChecked = value; 
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecked))); 
+                _isChecked = value;
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsChecked))); 
             }
         }
 
@@ -646,14 +685,29 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         {
             _parents.Add(parent);
             Count++;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+        }
+
+        protected void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            PropertyChanged?.Invoke(this, e);
         }
     }
 
     public class ImageFilterViewModel : TextFilterViewModel
     {
+        Rect _imageCrop;
+
         public ImageSource ImageSource { get; set; }
-        public Rect ImageCrop { get; set; }
+        public Rect ImageCrop
+        {
+            get => _imageCrop;
+            set
+            {
+                _imageCrop = value;
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(ImageCrop)));
+            }
+        }
     }
 
     public class FilterCollection : ObservableCollection<TextFilterViewModel>

@@ -38,9 +38,10 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 
         public async Task SaveFileAsync(DigitalAssetData data)
         {
+            //get existing file to replace, or new file
+            var file = Files.Where(i => i.Info.Path == data.Info.Path).Select(i => i.File).FirstOrDefault() ?? await (await GetFolder()).CreateFileAsync($"{Guid.NewGuid()}.json", CreationCollisionOption.ReplaceExisting);
+
             //save file
-            var fileName = $"{JsonConvert.SerializeObject(data.Info.Path).GetHashCode().ToString("X")}.json";
-            var file = await (await GetFolder()).CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
             using (StreamWriter writer = new StreamWriter(await file.OpenStreamForWriteAsync()))
             {
                 string jsonStr = JsonConvert.SerializeObject(data, Formatting.Indented);

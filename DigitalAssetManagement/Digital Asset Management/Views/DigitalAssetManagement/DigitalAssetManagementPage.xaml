@@ -61,7 +61,6 @@
 
         <DataTemplate x:Key="FilterControl">
             <StackPanel DataContext="{Binding}" Visibility="{Binding Count, Converter={StaticResource VisibleIfNotZero}}">
-                <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                 <TextBlock Text="{Binding Name}" Margin="0,6,0,12" Style="{StaticResource SubtitleTextBlockStyle}"/>
                 <ListView ItemsSource="{Binding}" ItemTemplateSelector="{StaticResource FilterControlSelector}" SelectionMode="None" MaxHeight="{Binding IsShowingAll, Converter={StaticResource ShowingAllToMaxFilterHeight}}" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden"/>
                 <AppBarButton HorizontalAlignment="Stretch" Style="{ThemeResource AppBarButtonRevealOverflowStyle}" Height="35" Click="ShowAllToggle" Visibility="{Binding ShowAllEnabled, Converter={StaticResource VisibleIfTrue}}">
@@ -84,7 +83,7 @@
             <VisualStateGroup>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1630"/>
+                        <AdaptiveTrigger MinWindowWidth="1760"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ImageGrid.ItemWidth" Value="333"/>
@@ -93,7 +92,7 @@
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="1950"/>
+                        <AdaptiveTrigger MinWindowWidth="2080"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ImageGrid.ItemWidth" Value="405"/>
@@ -102,7 +101,7 @@
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="2300"/>
+                        <AdaptiveTrigger MinWindowWidth="2430"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ImageGrid.ItemWidth" Value="504"/>
@@ -111,7 +110,7 @@
                 </VisualState>
                 <VisualState>
                     <VisualState.StateTriggers>
-                        <AdaptiveTrigger MinWindowWidth="2550"/>
+                        <AdaptiveTrigger MinWindowWidth="2680"/>
                     </VisualState.StateTriggers>
                     <VisualState.Setters>
                         <Setter Target="ImageGrid.ItemWidth" Value="561"/>
@@ -182,76 +181,108 @@
             </CommandBar.Content>
         </CommandBar>
 
-        <ScrollViewer Grid.Row="1" Grid.RowSpan="2" x:Name="filterTab" Visibility="Collapsed" >
-            <StackPanel Padding="12,0,0,0" Width="230" Margin="0,0,6,0" >
-                <TextBlock Text="Filter by" Margin="0,6,0,-28" Style="{StaticResource SubtitleTextBlockStyle}"/>
+        <Pivot Grid.Row="1" Grid.RowSpan="2" x:Name="filterTab" Visibility="Collapsed" Padding="12,-6,0,0" Width="360">
+            <PivotItem Header="Faces">
+                <ScrollViewer>
+                    <StackPanel>
+                        <!--faces-->
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceFilters}"/>
 
-                <!--faces-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceFilters}"/>
+                        <!--celebrities-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding CelebrityFilters}"/>
 
-                <!--celebrities-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding CelebrityFilters}"/>
-                
-                <!--emotion-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding EmotionFilters}"/>
+                        <!--emotion-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding EmotionFilters}"/>
 
-                <!--age-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding AgeFilters}"/>
-                
-                <!--Gender-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding GenderFilters}"/>
+                        <!--age-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding AgeFilters}"/>
 
-                <!--people-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding PeopleFilters}"/>
-                
-                <!--face attributes-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceAttributesFilters}"/>
+                        <!--Gender-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding GenderFilters}"/>
 
-                <!--face quality-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceQualityFilters}"/>
+                        <!--people-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding PeopleFilters}"/>
 
-                <!--color-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ColorFilters}"/>
+                        <!--face attributes-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceAttributesFilters}"/>
 
-                <!--Orientation-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding OrientationFilters}"/>
-
-                <!--Image type-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ImageTypeFilters}"/>
-
-                <!--size-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding SizeFilters}"/>
-
-                <!--words-->
-                <StackPanel Visibility="{Binding WordFilters.Count, Converter={StaticResource VisibleIfNotZero}}">
-                    <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
-                    <StackPanel Margin="0,6,0,12">
-                        <TextBlock Text="Extracted text"  Style="{StaticResource SubtitleTextBlockStyle}"/>
-                        <TextBlock Opacity=".6" Style="{StaticResource CaptionTextBlockStyle}">
-                            <Run Text="{Binding WordFilters.Count}"/><Run Text=" words total"/>
-                        </TextBlock>
+                        <!--face quality-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceQualityFilters}"/>
                     </StackPanel>
-                    <AutoSuggestBox PlaceholderText="Search for words to filter by" QueryIcon="Find" TextChanged="WordSearch" QuerySubmitted="WordSearchQuery" SuggestionChosen="WordSearchChosen" />
-                    <ListView ItemsSource="{Binding WordFiltersSelected}" SelectionMode="None" ItemTemplateSelector="{StaticResource FilterControlSelector}"/>
-                </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
 
-                <!--moderation-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ModerationFilters}"/>
+            <PivotItem Header="Objects">
+                <ScrollViewer>
+                    <StackPanel>
+                        <!--landmarks-->
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding LandmarkFilters}"/>
 
-                <!--landmarks-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding LandmarkFilters}"/>
+                        <!--brands-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding BrandFilters}"/>
 
-                <!--brands-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding BrandFilters}"/>
+                        <!--Objects-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ObjectFilters}"/>
 
-                <!--Objects-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ObjectFilters}"/>
-                
-                <!--tags-->
-                <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding TagFilters}"/>
+                        <!--tags-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding TagFilters}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
 
-            </StackPanel>
-        </ScrollViewer>
+            <PivotItem Header="Image">
+                <ScrollViewer>
+                    <StackPanel>
+                        <!--color-->
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ColorFilters}"/>
+
+                        <!--Orientation-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding OrientationFilters}"/>
+
+                        <!--size-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding SizeFilters}"/>
+
+                        <!--Image type-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ImageTypeFilters}"/>
+
+                        <!--moderation-->
+                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ModerationFilters}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+
+            <PivotItem Header="Text">
+                <ScrollViewer>
+                    <StackPanel>
+                        <!--words-->
+                        <StackPanel Visibility="{Binding WordFilters.Count, Converter={StaticResource VisibleIfNotZero}}">
+                            <StackPanel Margin="0,6,0,12">
+                                <TextBlock Text="Extracted text"  Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                <TextBlock Opacity=".6" Style="{StaticResource CaptionTextBlockStyle}">
+                                    <Run Text="{Binding WordFilters.Count}"/><Run Text=" words total"/>
+                                </TextBlock>
+                            </StackPanel>
+                            <AutoSuggestBox PlaceholderText="Search for words to filter by" QueryIcon="Find" TextChanged="WordSearch" QuerySubmitted="WordSearchQuery" SuggestionChosen="WordSearchChosen" />
+                            <ListView ItemsSource="{Binding WordFiltersSelected}" SelectionMode="None" ItemTemplateSelector="{StaticResource FilterControlSelector}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+        </Pivot>
 
         <!--active filters-->
         <Grid Grid.Row="1" Grid.Column="1" x:Name="ActiveFilters" DataContext="{Binding ActiveFilters}" Visibility="Collapsed" Margin="20,0,0,0">
@@ -313,6 +344,8 @@
                             </Grid>
                         </DataTemplate>
                     </GridView.ItemTemplate>
+                    
+                    <!--detail view-->
                     <FlyoutBase.AttachedFlyout>
                         <Flyout Placement="Full">
                             <Grid x:Name="DetailView">
@@ -337,11 +370,25 @@
                                     <StackPanel Width="430">
                                         <TextBlock Text="{Binding Insights.VisionInsights.Caption}" />
 
+                                        <!--Faces-->
                                         <StackPanel Visibility="{Binding Insights.FaceInsights, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Faces" Style="{StaticResource CaptionTextBlockStyle}" />
-                                            <TextBlock Text="{Binding Insights.FaceInsights.Length}"/>
+                                            <TextBlock Text="{Binding Insights.FaceInsights.Length}" />
                                         </StackPanel>
-                                        
+
+                                        <!--Emotions-->
+                                        <StackPanel Visibility="{Binding Emotions, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Emotions" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding Emotions}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Celebrities-->
                                         <StackPanel Visibility="{Binding Insights.VisionInsights.Celebrities, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Celebrities" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Celebrities}">
@@ -352,7 +399,68 @@
                                                 </ItemsControl.ItemsPanel>
                                             </ItemsControl>
                                         </StackPanel>
+                                        
+                                        <!--FaceAttributes-->
+                                        <StackPanel Visibility="{Binding FaceAttributes, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Face attributes" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding FaceAttributes}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
 
+                                        <!--FaceQualtity-->
+                                        <StackPanel Visibility="{Binding FaceQualtity, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Face qualtity" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding FaceQualtity}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Age-->
+                                        <StackPanel Visibility="{Binding Age, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Age" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding Age}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Gender-->
+                                        <StackPanel Visibility="{Binding Gender, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Gender" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding Gender}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Color-->
+                                        <StackPanel Visibility="{Binding Color, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Color" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding Color}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Brands-->
                                         <StackPanel Visibility="{Binding Insights.VisionInsights.Brands, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Brands" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Brands}">
@@ -364,6 +472,7 @@
                                             </ItemsControl>
                                         </StackPanel>
 
+                                        <!--Landmarks-->
                                         <StackPanel Visibility="{Binding Insights.VisionInsights.Landmarks, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Landmarks" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Landmarks}">
@@ -375,6 +484,7 @@
                                             </ItemsControl>
                                         </StackPanel>
 
+                                        <!--Extracted text-->
                                         <StackPanel Visibility="{Binding Insights.VisionInsights.Words, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Extracted text" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Words}">
@@ -386,6 +496,55 @@
                                             </ItemsControl>
                                         </StackPanel>
 
+                                        <!--Moderation-->
+                                        <StackPanel Visibility="{Binding Moderation, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Content moderation" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding Moderation}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--People-->
+                                        <StackPanel Visibility="{Binding People, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Number of people" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding People}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Orientation-->
+                                        <StackPanel Visibility="{Binding Orientation, Converter={StaticResource VisibleIfNotNull}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Orientation" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <TextBlock Text="{Binding Orientation}" />
+                                        </StackPanel>
+
+                                        <!--Size-->
+                                        <StackPanel Visibility="{Binding Size, Converter={StaticResource VisibleIfNotNull}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Size" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <TextBlock Text="{Binding Size}" />
+                                        </StackPanel>
+
+                                        <!--Image Type-->
+                                        <StackPanel Visibility="{Binding ImageType, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                            <TextBlock Text="Image type" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding ImageType}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Objects-->
                                         <StackPanel Visibility="{Binding Insights.VisionInsights.Objects, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Objects" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Objects}">
@@ -397,6 +556,7 @@
                                             </ItemsControl>
                                         </StackPanel>
 
+                                        <!--Tags-->
                                         <StackPanel Visibility="{Binding Insights.VisionInsights.Tags, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
                                             <TextBlock Text="Tags" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Tags}">
@@ -458,7 +618,7 @@
             </StackPanel>
         </StackPanel>
 
-        <ProgressRing x:Name="progressRing" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="2" Grid.RowSpan="3"/>
+        <ProgressRing x:Name="progressRing" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.ColumnSpan="2" Grid.RowSpan="3"  Grid.Column="1"/>
 
     </Grid>
 </Page>

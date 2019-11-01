@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ServiceHelpers
@@ -18,6 +19,7 @@ namespace ServiceHelpers
     {
         private const int MaxFaceListCount = 64;
         private static Dictionary<string, FaceListInfo> faceLists;
+        private static readonly SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
 
         public static string FaceListsUserDataFilter { get; set; }
 
@@ -70,6 +72,19 @@ namespace ServiceHelpers
         }
 
         private static async Task<SimilarFace> FindSimilarPersistedFaceAsync(string imageUrl, Func<Task<Stream>> imageStreamCallback, Guid faceId, DetectedFace face)
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                return await FindSimilarOrInsertAsync(imageUrl, imageStreamCallback, faceId, face);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        private static async Task<SimilarFace> FindSimilarOrInsertAsync(string imageUrl, Func<Task<Stream>> imageStreamCallback, Guid faceId, DetectedFace face)
         {
             if (faceLists == null)
             {
