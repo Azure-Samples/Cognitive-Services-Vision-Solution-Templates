@@ -60,7 +60,7 @@
                                   DefaultTemplate="{StaticResource TextFilterControl}"/>
 
         <DataTemplate x:Key="FilterControl">
-            <StackPanel DataContext="{Binding}" Visibility="{Binding Count, Converter={StaticResource VisibleIfNotZero}}">
+            <StackPanel DataContext="{Binding}" Visibility="{Binding Count, Converter={StaticResource VisibleIfNotZero}}" Margin="0,10,0,38">
                 <TextBlock Text="{Binding Name}" Margin="0,6,0,12" Style="{StaticResource SubtitleTextBlockStyle}"/>
                 <ListView ItemsSource="{Binding}" ItemTemplateSelector="{StaticResource FilterControlSelector}" SelectionMode="None" MaxHeight="{Binding IsShowingAll, Converter={StaticResource ShowingAllToMaxFilterHeight}}" ScrollViewer.VerticalScrollMode="Disabled" ScrollViewer.VerticalScrollBarVisibility="Hidden"/>
                 <AppBarButton HorizontalAlignment="Stretch" Style="{ThemeResource AppBarButtonRevealOverflowStyle}" Height="35" Click="ShowAllToggle" Visibility="{Binding ShowAllEnabled, Converter={StaticResource VisibleIfTrue}}">
@@ -189,31 +189,24 @@
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceFilters}"/>
 
                         <!--celebrities-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding CelebrityFilters}"/>
 
                         <!--emotion-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding EmotionFilters}"/>
 
                         <!--age-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding AgeFilters}"/>
 
                         <!--Gender-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding GenderFilters}"/>
 
                         <!--people-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding PeopleFilters}"/>
 
                         <!--face attributes-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
-                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceAttributesFilters}"/>
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceAttributesFilters}" />
 
                         <!--face quality-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding FaceQualityFilters}"/>
                     </StackPanel>
                 </ScrollViewer>
@@ -226,15 +219,12 @@
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding LandmarkFilters}"/>
 
                         <!--brands-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding BrandFilters}"/>
 
                         <!--Objects-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ObjectFilters}"/>
 
                         <!--tags-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding TagFilters}"/>
                     </StackPanel>
                 </ScrollViewer>
@@ -247,19 +237,15 @@
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ColorFilters}"/>
 
                         <!--Orientation-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding OrientationFilters}"/>
 
                         <!--size-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding SizeFilters}"/>
 
                         <!--Image type-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ImageTypeFilters}"/>
 
                         <!--moderation-->
-                        <Rectangle Margin="0,48,0,0" Height="1" Fill="Gray" Opacity="0.5"/>
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding ModerationFilters}"/>
                     </StackPanel>
                 </ScrollViewer>
