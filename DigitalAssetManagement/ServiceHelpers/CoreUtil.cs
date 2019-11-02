@@ -83,6 +83,11 @@ namespace ServiceHelpers
             return new Rect(rect.X - ((width - rect.Width)/2), rect.Y - ((height - rect.Height)/2), width, height);
         }
 
+        public static Rect Scale(this Rect rect, double scale)
+        {
+            return new Rect(rect.X * scale, rect.Y * scale, rect.Width * scale, rect.Height * scale);
+        }
+
         public static async Task<Tuple<double, double>> ResizeBitmapAsync(WriteableBitmap wb, int width, int height, IRandomAccessStream resultStream)
         {
             int originalWidth = wb.PixelWidth;

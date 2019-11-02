@@ -334,7 +334,11 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                     System.Diagnostics.Debug.WriteLine(args.CheckCurrent());
                     //find suggestion for last word
                     var lastWord = sender.Text.Trim().Split(' ').LastOrDefault() ?? string.Empty;
-                    sender.ItemsSource = ImageFilters.WordFilters.Where(i => ((string)i.Key).StartsWith(lastWord)).Select(i => i.Key).Take(5);
+                    //pick top 5 words sorting words starting with on top
+                    sender.ItemsSource = ImageFilters.WordFilters
+                        .Where(i => ((string)i.Key).Contains(lastWord, StringComparison.OrdinalIgnoreCase)) //contains word
+                        .OrderBy(i => ((string)i.Key).StartsWith(lastWord, StringComparison.OrdinalIgnoreCase) ? 1 : 2) //put terms starting with word on top
+                        .Select(i => i.Key).Take(5); //top 5
                 }
                 else
                 {
