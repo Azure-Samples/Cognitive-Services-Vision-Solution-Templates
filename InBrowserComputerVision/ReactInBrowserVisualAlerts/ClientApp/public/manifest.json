@@ -1,6 +1,6 @@
 {
-  "short_name": "ReactWebCamClassification",
-  "name": "ReactWebCamClassification",
+  "short_name": "VisualAlerts",
+  "name": "ReactInBrowserVisualAlerts",
   "icons": [
     {
       "src": "favicon.ico",
