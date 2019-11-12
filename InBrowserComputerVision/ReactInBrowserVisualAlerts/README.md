@@ -78,10 +78,10 @@ This code was based on Visual Studio's template when creating a new ASP.NET Core
 
 
 
-|-------------|-------------|
+|----------------|--------------|
 | [ClientApp](./ClientApp) | The folder of the `create-react-app` application where `npm install` commands can be run|
 | [src](./ClientApp/src) | Folder that has the relavant source code. This folder typically has javascript and styling files|
-| [WebCamCV.js](./ClientApp/src/components/WebCamCV.js) | The React component that does all the tasks described at the top|
+| [Home.js](./ClientApp/src/components/Home.js) | The React component that does all the tasks described at the top|
 | [layout.js](./ClientApp/src/components/layout.js) | The React component that defines the spatial layout|
 | [index.js](./ClientApp/src/index.js) | Calls the react-dom and the app from App.js |
 | [App.js](./ClientApp/src/App.js) | Typically routes react components. |
