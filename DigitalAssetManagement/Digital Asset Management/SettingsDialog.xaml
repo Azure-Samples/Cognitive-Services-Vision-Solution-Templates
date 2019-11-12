@@ -11,20 +11,43 @@
     SecondaryButtonText="Cancel"
     DefaultButton="Primary" PrimaryButtonClick="ContentDialog_PrimaryButtonClick">
     <Grid Margin="20">
-        <StackPanel Spacing="35">
-            <StackPanel>
-                <PasswordBox x:Name="CognitiveApi" Password="{x:Bind SettingsHelper.CognitiveServiceApiKey}">
-                    <PasswordBox.Header>
-                        <TextBlock>
-                            Cognitive service api key
-                            <Hyperlink NavigateUri="https://ms.portal.azure.com/#create/Microsoft.CognitiveServicesAllInOne">(create)</Hyperlink>
-                        </TextBlock>
-                    </PasswordBox.Header>
-                </PasswordBox>
-                <TextBlock x:Name="CognitiveApiError" Foreground="Red" TextWrapping="WrapWholeWords" Visibility="Collapsed"/>
+        <StackPanel Spacing="45">
+
+            <StackPanel Spacing="10">
+                <TextBlock Style="{ThemeResource SubtitleTextBlockStyle}">
+                    Cognitive service
+                    <Hyperlink FontSize="14" NavigateUri="https://ms.portal.azure.com/#create/Microsoft.CognitiveServicesAllInOne">create</Hyperlink>
+                </TextBlock>
+
+                <StackPanel>
+                    <PasswordBox Header="Api key" x:Name="CognitiveApi" Password="{x:Bind SettingsHelper.CognitiveServiceApiKey}"/>
+                    <TextBlock x:Name="CognitiveApiError" Foreground="Red" TextWrapping="WrapWholeWords" Visibility="Collapsed"/>
+                </StackPanel>
+
+                <TextBox x:Name="ApiEndpoint" Header="Endpoint" Text="{x:Bind SettingsHelper.CognitiveServiceEndpoint}" />
             </StackPanel>
-            <TextBox x:Name="ApiEndpoint" Header="Cognitive service endpoint" Text="{x:Bind SettingsHelper.CognitiveServiceEndpoint}" />
+
+            <StackPanel Spacing="10">
+                <TextBlock Style="{ThemeResource SubtitleTextBlockStyle}">
+                    Custom vision (optional)
+                    <Hyperlink FontSize="14" NavigateUri="https://ms.portal.azure.com/#create/Microsoft.CognitiveServicesCustomVision">create</Hyperlink>
+                </TextBlock>
+                
+                <StackPanel>
+                    <PasswordBox x:Name="CustomVisionTrainingApi" Header="Training api key" Password="{x:Bind SettingsHelper.CustomVisionTrainingApiKey}" />
+                    <TextBlock x:Name="CustomVisionTrainingApiError" Foreground="Red" TextWrapping="WrapWholeWords" Visibility="Collapsed"/>
+                </StackPanel>
+
+                <StackPanel>
+                    <PasswordBox x:Name="CustomVisionPredictionApi" Header="Prediction api key" Password="{x:Bind SettingsHelper.CustomVisionPredictionApiKey}"/> 
+                    <TextBlock x:Name="CustomVisionPredictionApiError" Foreground="Red" TextWrapping="WrapWholeWords" Visibility="Collapsed"/>
+                </StackPanel>
+
+                <TextBox x:Name="CustomVisionEndpoint" Header="Endpoint" Text="{x:Bind SettingsHelper.CustomVisionApiKeyEndpoint}" />
+            </StackPanel>
+
             <CheckBox x:Name="Age" Content="Show age and gender information" IsChecked="{x:Bind SettingsHelper.ShowAgeAndGender}" />
+            
         </StackPanel>
     </Grid>
 </ContentDialog>

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using Face = Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using System;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 
 namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 {
@@ -9,6 +10,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         public Uri ImageUri { get; set; }
         public FaceInsights[] FaceInsights { get; set; }
         public VisionInsights VisionInsights { get; set; }
+        public CustomVisionInsights[] CustomVisionInsights { get; set; }
     }
 
     public class VisionInsights
@@ -31,5 +33,18 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         public Guid UniqueFaceId { get; set; }
         public Face.FaceRectangle FaceRectangle { get; set; }
         public Face.FaceAttributes FaceAttributes { get; set; }
+    }
+
+    public class CustomVisionInsights
+    {
+        public string Name { get; set; }
+        public CustomVisionPrediction[] Predictions { get; set; }
+        public bool IsObjectDetection { get; set; }
+    }
+
+    public class CustomVisionPrediction
+    {
+        public string Name { get; set; }
+        public double Probability { get; set; }
     }
 }

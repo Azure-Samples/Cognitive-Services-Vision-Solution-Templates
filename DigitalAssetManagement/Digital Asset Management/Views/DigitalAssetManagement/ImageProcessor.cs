@@ -1,11 +1,16 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+using Microsoft.Rest;
 using Microsoft.WindowsAzure.Storage.Blob;
 using ServiceHelpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
@@ -14,17 +19,97 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 {
     public class ImageProcessor
     {
-        static readonly VisualFeatureTypes[] _visionFeatures = new[]
+        public async Task<DigitalAssetData> ProcessImagesAsync(ImageProcessorSource source, IImageProcessorService[] services, int? fileLimit, int? startingFileIndex, Func<ImageInsights, Task> callback)
         {
-            VisualFeatureTypes.Tags,
-            VisualFeatureTypes.Description,
-            VisualFeatureTypes.Objects,
-            VisualFeatureTypes.Brands,
-            VisualFeatureTypes.Categories,
-            VisualFeatureTypes.Adult,
-            VisualFeatureTypes.ImageType,
-            VisualFeatureTypes.Color
-        };
+            //validate
+            if (services == null || services.Length == 0)
+            {
+                throw new ApplicationException("No Azure services provided for image processing pipeline. Need at least 1.");
+            }
+
+            //get images
+            var insights = new List<ImageInsights>();
+            var (filePaths, reachedEndOfFiles) = await source.GetFilePaths(fileLimit, startingFileIndex);
+
+            //process each image - in batches
+            var tasks = new List<Task<ImageInsights>>();
+            var lastFile = filePaths.Last();
+            foreach (var filePath in filePaths)
+            {
+                tasks.Add(ProcessImageAsync(filePath, services));
+                if (tasks.Count == 8 || filePath == lastFile)
+                {
+                    var results = await Task.WhenAll(tasks);
+                    foreach (var task in tasks)
+                    {
+                        var insight = task.Result;
+                        insights.Add(insight);
+                        await callback(insight);
+                    }
+                    tasks.Clear();
+                }
+            }
+
+            var serviceTypes = services.Select(i => i.GetProcessorServiceType).Aggregate((i, e) => i | e);
+            var customVisionProjects = services.OfType<CustomVisionProcessorService>().SelectMany(i => i.ProjectIterations.Select(e => e.Project)).ToArray();
+            return new DigitalAssetData() 
+            { 
+                Info = new DigitalAssetInfo 
+                { 
+                    Path = source.Path, 
+                    FileLimit = fileLimit, 
+                    Services = serviceTypes, 
+                    CustomVisionProjects = customVisionProjects, 
+                    Name = source.GetName(), 
+                    LastFileIndex = filePaths.Count() + (startingFileIndex ?? 0), 
+                    ReachedEndOfFiles = reachedEndOfFiles, 
+                    Source = source.GetType().Name 
+                } , 
+                Insights = insights.ToArray() 
+            };
+        }
+
+        async Task<ImageInsights> ProcessImageAsync(Uri filePath, IImageProcessorService[] services)
+        {
+            ImageAnalyzer analyzer = null;
+            if (filePath.IsFile)
+            {
+                analyzer = new ImageAnalyzer((await StorageFile.GetFileFromPathAsync(filePath.LocalPath)).OpenStreamForReadAsync);
+            }
+            else
+            {
+                analyzer = new ImageAnalyzer(filePath.AbsoluteUri);
+            }
+            analyzer.ShowDialogOnFaceApiErrors = true;
+
+            //run image processors
+            var tasks = services.Select(i => (i.ProcessImage(analyzer).ToArray())).ToArray();
+            await Task.WhenAll(tasks.SelectMany(i => i));
+
+            //run post image processor
+            await Task.WhenAll(services.SelectMany(i => (i.PostProcessImage(analyzer))));
+
+            //assign the results
+            var result = new ImageInsights { ImageUri = filePath };
+            for (int index = 0; index < services.Length; index++)
+            {
+                services[index].AssignResult(tasks[index], analyzer, result);
+            }
+
+            return result;
+        }
+    }
+
+    public interface IImageProcessorService
+    {
+        ImageProcessorServiceType GetProcessorServiceType { get; }
+        IEnumerable<Task> ProcessImage(ImageAnalyzer analyzer);
+        IEnumerable<Task> PostProcessImage(ImageAnalyzer analyzer);
+        void AssignResult(IEnumerable<Task> completeTask, ImageAnalyzer analyzer, ImageInsights result);
+    }
+
+    public class FaceProcessorService : IImageProcessorService
+    {
         static readonly FaceAttributeType[] _faceFeatures = new[]
         {
             FaceAttributeType.Accessories,
@@ -43,74 +128,65 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             FaceAttributeType.Smile
         };
 
-        public async Task<DigitalAssetData> ProcessImagesAsync(ImageProcessorSource source, ImageProcessorService? services, int? fileLimit, int? startingFileIndex, Func<ImageInsights, Task> callback)
+        public ImageProcessorServiceType GetProcessorServiceType { get => ImageProcessorServiceType.Face; }
+        public IEnumerable<Task> ProcessImage(ImageAnalyzer analyzer)
         {
-            //validate
-            if (services == null)
-            {
-                throw new ApplicationException("No Azure services provided for image processing pipeline. Need at least 1.");
-            }
-
-            //get images
-            var insights = new List<ImageInsights>();
-            var (filePaths, reachedEndOfFiles) = await source.GetFilePaths(fileLimit, startingFileIndex);
-
-            //process each image - in batches
-            var tasks = new List<Task<ImageInsights>>();
-            var lastFile = filePaths.Last();
-            foreach (var filePath in filePaths)
-            {
-                tasks.Add(ProcessImageAsync(filePath, services.Value));
-                if (tasks.Count == 8 || filePath == lastFile)
-                {
-                    var results = await Task.WhenAll(tasks);
-                    foreach (var task in tasks)
-                    {
-                        var insight = task.Result;
-                        insights.Add(insight);
-                        await callback(insight);
-                    }
-                    tasks.Clear();
-                }
-            }
-
-            return new DigitalAssetData() { Info = new DigitalAssetInfo { Path = source.Path, FileLimit = fileLimit, Services = services.Value, Name = source.GetName(), LastFileIndex = filePaths.Count() + (startingFileIndex ?? 0), ReachedEndOfFiles = reachedEndOfFiles, Source = source.GetType().Name } , Insights = insights.ToArray() };
+            yield return analyzer.DetectFacesAsync(true, false, _faceFeatures);
         }
 
-        async Task<ImageInsights> ProcessImageAsync(Uri filePath, ImageProcessorService services)
+        public IEnumerable<Task> PostProcessImage(ImageAnalyzer analyzer)
         {
-            ImageAnalyzer analyzer = null;
-            if (filePath.IsFile)
-            {
-                analyzer = new ImageAnalyzer((await StorageFile.GetFileFromPathAsync(filePath.LocalPath)).OpenStreamForReadAsync);
-            }
-            else
-            {
-                analyzer = new ImageAnalyzer(filePath.AbsoluteUri);
-            }
-            analyzer.ShowDialogOnFaceApiErrors = true;
+            yield return analyzer.FindSimilarPersistedFacesAsync();
+        }
 
-            // trigger vision, face, emotion and OCR requests
-            var tasks = new List<Task>();
-            if (services.HasFlag(ImageProcessorService.ComputerVision))
+        public void AssignResult(IEnumerable<Task> completeTask, ImageAnalyzer analyzer, ImageInsights result)
+        {
+            // assign face api results
+            List<FaceInsights> faceInsightsList = new List<FaceInsights>();
+            foreach (var face in analyzer.DetectedFaces ?? Array.Empty<DetectedFace>())
             {
-                tasks.Add(analyzer.AnalyzeImageAsync(null, visualFeatures: _visionFeatures));
-                tasks.Add(analyzer.RecognizeTextAsync());
-            }
-            if (services.HasFlag(ImageProcessorService.Face))
-            {
-                tasks.Add(analyzer.DetectFacesAsync(true, false, _faceFeatures));
-            }
-            await Task.WhenAll(tasks);
+                FaceInsights faceInsights = new FaceInsights { FaceRectangle = face.FaceRectangle, FaceAttributes = face.FaceAttributes };
 
-            // trigger face match against previously seen faces
-            if (services.HasFlag(ImageProcessorService.Face))
-            {
-                await analyzer.FindSimilarPersistedFacesAsync();
+                var similarFaceMatch = analyzer.SimilarFaceMatches?.FirstOrDefault(s => s.Face.FaceId == face.FaceId);
+                if (similarFaceMatch != null)
+                {
+                    faceInsights.UniqueFaceId = similarFaceMatch.SimilarPersistedFace.PersistedFaceId.GetValueOrDefault();
+                }
+
+                faceInsightsList.Add(faceInsights);
             }
+            result.FaceInsights = faceInsightsList.ToArray();
+        }
+    }
 
-            ImageInsights result = new ImageInsights { ImageUri = filePath };
+    public class ComputerVisionProcessorService : IImageProcessorService
+    {
+        static readonly VisualFeatureTypes[] _visionFeatures = new[]
+        {
+            VisualFeatureTypes.Tags,
+            VisualFeatureTypes.Description,
+            VisualFeatureTypes.Objects,
+            VisualFeatureTypes.Brands,
+            VisualFeatureTypes.Categories,
+            VisualFeatureTypes.Adult,
+            VisualFeatureTypes.ImageType,
+            VisualFeatureTypes.Color
+        };
 
+        public ImageProcessorServiceType GetProcessorServiceType { get => ImageProcessorServiceType.ComputerVision; }
+        public IEnumerable<Task> ProcessImage(ImageAnalyzer analyzer)
+        {
+            yield return analyzer.AnalyzeImageAsync(null, visualFeatures: _visionFeatures);
+            yield return analyzer.RecognizeTextAsync();
+        }
+
+        public IEnumerable<Task> PostProcessImage(ImageAnalyzer analyzer)
+        {
+            yield break;
+        }
+
+        public void AssignResult(IEnumerable<Task> completeTask, ImageAnalyzer analyzer, ImageInsights result)
+        {
             // assign computer vision results
             result.VisionInsights = new VisionInsights
             {
@@ -126,24 +202,136 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 Metadata = analyzer.AnalysisResult?.Metadata,
                 Words = analyzer.TextOperationResult?.RecognitionResult?.Lines != null ? analyzer.TextOperationResult.RecognitionResult.Lines.SelectMany(i => i.Words).Select(i => i.Text).ToArray() : new string[0],
             };
+        }
+    }
 
-            // assign face api results
-            List<FaceInsights> faceInsightsList = new List<FaceInsights>();
-            foreach (var face in analyzer.DetectedFaces ?? Array.Empty<DetectedFace>())
+    public class CustomVisionProcessorService : IImageProcessorService
+    {
+        SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+        ICustomVisionPredictionClient _predictionClient;
+        public ProjectIteration[] ProjectIterations { get; }
+
+        public CustomVisionProcessorService(ICustomVisionPredictionClient predictionClient, ProjectIteration[] projectIterations)
+        {
+            //set fields
+            _predictionClient = predictionClient;
+            ProjectIterations = projectIterations;
+        }
+
+        public static async Task<ProjectIteration[]> GetProjectIterations(ICustomVisionTrainingClient trainingClient, Guid[] projects)
+        {
+            var result = new List<ProjectIteration>();
+            foreach (var project in projects)
             {
-                FaceInsights faceInsights = new FaceInsights { FaceRectangle = face.FaceRectangle, FaceAttributes = face.FaceAttributes };
-
-                SimilarFaceMatch similarFaceMatch = analyzer.SimilarFaceMatches.FirstOrDefault(s => s.Face.FaceId == face.FaceId);
-                if (similarFaceMatch != null)
+                var iterations = await trainingClient.GetIterationsAsync(project);
+                var projectEntity = await trainingClient.GetProjectAsync(project);
+                var domain = await trainingClient.GetDomainAsync(projectEntity.Settings.DomainId);
+                var iteration = iterations.Where(i => i.Status == "Completed").OrderByDescending(i => i.TrainedAt.Value).FirstOrDefault();
+                if (iteration != null)
                 {
-                    faceInsights.UniqueFaceId = similarFaceMatch.SimilarPersistedFace.PersistedFaceId.GetValueOrDefault();
+                    result.Add(new ProjectIteration() { Project = project, Iteration = iteration.Id, ProjectName = projectEntity.Name, IsObjectDetection = domain.Type == "ObjectDetection" });
                 }
-
-                faceInsightsList.Add(faceInsights);
             }
-            result.FaceInsights = faceInsightsList.ToArray();
+            return result.ToArray();
+        }
 
-            return result;
+        public ImageProcessorServiceType GetProcessorServiceType { get => ImageProcessorServiceType.CustomVision; }
+        public IEnumerable<Task> ProcessImage(ImageAnalyzer analyzer)
+        {
+            foreach (var projectIteration in ProjectIterations)
+            {
+                yield return PredictImage(analyzer, projectIteration, ProjectIterations.Length);
+            }
+        }
+
+        async Task<ValueTuple<ImagePrediction, ProjectIteration>> PredictImage(ImageAnalyzer analyzer, ProjectIteration projectIteration, int projectCount)
+        {
+            if (analyzer.ImageUrl != null)
+            {
+                return (await AutoRetry(async () => await _predictionClient.PredictImageUrlAsync(projectIteration.Project, new Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models.ImageUrl(analyzer.ImageUrl), projectIteration.Iteration)), projectIteration);
+            }
+            else
+            {
+                //bug fix: if multiple project needed to be processed for a local file, create requests for them one at a time. 
+                //(for some reason when the CustomVision client creates multiple requests using the same file stream it locks up creating the request - a better fix would be good as this one degrades speed)
+                var allowAsync = projectCount == 1;
+
+                return (await RunSequentially(async () => await AutoRetry(async () => await _predictionClient.PredictImageAsync(projectIteration.Project, await analyzer.GetImageStreamCallback(), projectIteration.Iteration)), allowAsync), projectIteration);
+            }
+        }
+
+        async Task<TResponse> RunSequentially<TResponse>(Func<Task<TResponse>> action, bool allowAsync)
+        {
+            if (!allowAsync)
+            {
+                await _semaphore.WaitAsync();
+            }
+            try
+            {
+                return await action();
+            }
+            finally
+            {
+                if (!allowAsync)
+                {
+                    _semaphore.Release();
+                }
+            }
+        }
+
+        async Task<TResponse> AutoRetry<TResponse>(Func<Task<TResponse>> action)
+        {
+            int retriesLeft = 6;
+            int delay = 500;
+
+            TResponse response = default(TResponse);
+
+            while (true)
+            {
+                try
+                {
+                    response = await action();
+                    break;
+                }
+                catch (HttpOperationException exception) when (exception.Response.StatusCode == (System.Net.HttpStatusCode)429 && retriesLeft > 0)
+                {
+                    ErrorTrackingHelper.TrackException(exception, "Custom Vision API throttling error");
+
+                    await Task.Delay(delay);
+                    retriesLeft--;
+                    delay *= 2;
+                    continue;
+                }
+            }
+
+            return response;
+        }
+
+        public IEnumerable<Task> PostProcessImage(ImageAnalyzer analyzer)
+        {
+            yield break;
+        }
+
+        public void AssignResult(IEnumerable<Task> completeTask, ImageAnalyzer analyzer, ImageInsights result)
+        {
+            result.CustomVisionInsights = completeTask.OfType<Task<ValueTuple<ImagePrediction, ProjectIteration>>>().Select(i => new CustomVisionInsights 
+            { 
+                Name = i.Result.Item2.ProjectName, 
+                IsObjectDetection = i.Result.Item2.IsObjectDetection, 
+                Predictions = i.Result.Item1.Predictions.Select(e => new CustomVisionPrediction 
+                { 
+                    Name = e.TagName, 
+                    Probability = e.Probability 
+                }).ToArray() 
+            }).ToArray();
+        }
+
+        public class ProjectIteration
+        {
+            public Guid Project { get; set; }
+            public Guid Iteration { get; set; }
+            public string ProjectName { get; set; }
+            public bool IsObjectDetection { get; set; }
         }
     }
 
@@ -269,13 +457,5 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         {
             return Uri.UnescapeDataString(Path.Segments.Last());
         }
-    }
-
-    [Flags]
-    public enum ImageProcessorService
-    {
-        Face = 1,
-        ComputerVision = 2,
-        CustomVision = 4
     }
 }

@@ -215,6 +215,12 @@
             <PivotItem Header="Objects">
                 <ScrollViewer>
                     <StackPanel>
+                        <!--custom vision objects-->
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding CustomVisionObjectFilters}"/>
+                        
+                        <!--custom vision tags-->
+                        <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding CustomVisionTagFilters}"/>
+
                         <!--landmarks-->
                         <ContentControl ContentTemplate="{StaticResource FilterControl}" Content="{Binding LandmarkFilters}"/>
 
@@ -322,7 +328,7 @@
                                     </interactivity:Interaction.Behaviors>
                                 </Image>
                                 <Grid x:Name="Caption" Visibility="Collapsed">
-                                    <Grid VerticalAlignment="Bottom" Visibility="{Binding Insights.VisionInsights.Caption, Converter={StaticResource VisibleIfNotNull}}">
+                                    <Grid VerticalAlignment="Bottom" Visibility="{Binding Insights.VisionInsights.Caption, Converter={StaticResource VisibleIfNotNull}, FallbackValue=Collapsed}">
                                         <Rectangle Fill="Black" Opacity=".5"/>
                                         <TextBlock Text="{Binding Insights.VisionInsights.Caption}" TextWrapping="WrapWholeWords" Padding="12"/>
                                     </Grid>
@@ -357,13 +363,13 @@
                                         <TextBlock Text="{Binding Insights.VisionInsights.Caption}" />
 
                                         <!--Faces-->
-                                        <StackPanel Visibility="{Binding Insights.FaceInsights, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.FaceInsights, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Faces" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <TextBlock Text="{Binding Insights.FaceInsights.Length}" />
                                         </StackPanel>
 
                                         <!--Emotions-->
-                                        <StackPanel Visibility="{Binding Emotions, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Emotions, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Emotions" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Emotions}">
                                                 <ItemsControl.ItemsPanel>
@@ -375,7 +381,7 @@
                                         </StackPanel>
 
                                         <!--Celebrities-->
-                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Celebrities, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Celebrities, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Celebrities" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Celebrities}">
                                                 <ItemsControl.ItemsPanel>
@@ -387,7 +393,7 @@
                                         </StackPanel>
                                         
                                         <!--FaceAttributes-->
-                                        <StackPanel Visibility="{Binding FaceAttributes, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding FaceAttributes, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Face attributes" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding FaceAttributes}">
                                                 <ItemsControl.ItemsPanel>
@@ -399,7 +405,7 @@
                                         </StackPanel>
 
                                         <!--FaceQualtity-->
-                                        <StackPanel Visibility="{Binding FaceQualtity, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding FaceQualtity, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Face qualtity" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding FaceQualtity}">
                                                 <ItemsControl.ItemsPanel>
@@ -411,7 +417,7 @@
                                         </StackPanel>
 
                                         <!--Age-->
-                                        <StackPanel Visibility="{Binding Age, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Age, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Age" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Age}">
                                                 <ItemsControl.ItemsPanel>
@@ -423,7 +429,7 @@
                                         </StackPanel>
 
                                         <!--Gender-->
-                                        <StackPanel Visibility="{Binding Gender, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Gender, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Gender" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Gender}">
                                                 <ItemsControl.ItemsPanel>
@@ -435,7 +441,7 @@
                                         </StackPanel>
 
                                         <!--Color-->
-                                        <StackPanel Visibility="{Binding Color, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Color, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Color" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Color}">
                                                 <ItemsControl.ItemsPanel>
@@ -447,7 +453,7 @@
                                         </StackPanel>
 
                                         <!--Brands-->
-                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Brands, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Brands, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Brands" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Brands}">
                                                 <ItemsControl.ItemsPanel>
@@ -459,7 +465,7 @@
                                         </StackPanel>
 
                                         <!--Landmarks-->
-                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Landmarks, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Landmarks, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Landmarks" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Landmarks}">
                                                 <ItemsControl.ItemsPanel>
@@ -471,7 +477,7 @@
                                         </StackPanel>
 
                                         <!--Extracted text-->
-                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Words, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Words, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Extracted text" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Words}">
                                                 <ItemsControl.ItemsPanel>
@@ -483,7 +489,7 @@
                                         </StackPanel>
 
                                         <!--Moderation-->
-                                        <StackPanel Visibility="{Binding Moderation, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Moderation, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Content moderation" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Moderation}">
                                                 <ItemsControl.ItemsPanel>
@@ -495,7 +501,7 @@
                                         </StackPanel>
 
                                         <!--People-->
-                                        <StackPanel Visibility="{Binding People, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding People, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Number of people" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding People}">
                                                 <ItemsControl.ItemsPanel>
@@ -507,19 +513,19 @@
                                         </StackPanel>
 
                                         <!--Orientation-->
-                                        <StackPanel Visibility="{Binding Orientation, Converter={StaticResource VisibleIfNotNull}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Orientation, Converter={StaticResource VisibleIfNotNull}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Orientation" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <TextBlock Text="{Binding Orientation}" />
                                         </StackPanel>
 
                                         <!--Size-->
-                                        <StackPanel Visibility="{Binding Size, Converter={StaticResource VisibleIfNotNull}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Size, Converter={StaticResource VisibleIfNotNull}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Size" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <TextBlock Text="{Binding Size}" />
                                         </StackPanel>
 
                                         <!--Image Type-->
-                                        <StackPanel Visibility="{Binding ImageType, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding ImageType, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Image type" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding ImageType}">
                                                 <ItemsControl.ItemsPanel>
@@ -530,8 +536,32 @@
                                             </ItemsControl>
                                         </StackPanel>
 
+                                        <!--Custom Vision objects-->
+                                        <StackPanel Visibility="{Binding CustomVisionObjects, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
+                                            <TextBlock Text="Custom Vision objects" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding CustomVisionObjects}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
+                                        <!--Custom Vision tags-->
+                                        <StackPanel Visibility="{Binding CustomVisionTags, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
+                                            <TextBlock Text="Custom Vision tags" Style="{StaticResource CaptionTextBlockStyle}" />
+                                            <ItemsControl ItemsSource="{Binding CustomVisionTags}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <controls:WrapPanel Orientation="Horizontal" HorizontalSpacing="10"/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+                                        </StackPanel>
+
                                         <!--Objects-->
-                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Objects, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Objects, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Objects" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Objects}">
                                                 <ItemsControl.ItemsPanel>
@@ -543,7 +573,7 @@
                                         </StackPanel>
 
                                         <!--Tags-->
-                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Tags, Converter={StaticResource VisibleIfNotZero}}" Margin="0,25,0,0">
+                                        <StackPanel Visibility="{Binding Insights.VisionInsights.Tags, Converter={StaticResource VisibleIfNotZero}, FallbackValue=Collapsed}" Margin="0,25,0,0">
                                             <TextBlock Text="Tags" Style="{StaticResource CaptionTextBlockStyle}" />
                                             <ItemsControl ItemsSource="{Binding Insights.VisionInsights.Tags}">
                                                 <ItemsControl.ItemsPanel>
@@ -564,12 +594,7 @@
                 <Button Background="Transparent" Grid.Row="1" HorizontalAlignment="Left" Margin="0,15,0,0" Click="Reprocess_Click" Visibility="{x:Bind CurrentData.Info.ReachedEndOfFiles, Mode=OneWay, Converter={StaticResource VisibleIfFalse}, FallbackValue=Collapsed}">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE9F3;"  VerticalAlignment="Center"/>
-                        <TextBlock Text="Proccess" VerticalAlignment="Center"/>
-                        <ComboBox x:Name="ReprocessComboBox">
-                            <ComboBoxItem IsSelected="True" Content="50"/>
-                            <ComboBoxItem Content="all"/>
-                        </ComboBox>
-                        <TextBlock Text="additional files"  VerticalAlignment="Center"/>
+                        <TextBlock Text="Proccess 50 additional files" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
             </Grid>
@@ -596,11 +621,31 @@
                     </Grid>
                 </Border>
             </GridView>
-            <StackPanel HorizontalAlignment="Center">
+            <StackPanel HorizontalAlignment="Left" Margin="190,0,0,0">
                 <TextBlock Text="Use Azure services from" Margin="-10,20,0,5"/>
                 <CheckBox Content="Face API" IsChecked="True" x:Name="FaceApi" />
                 <CheckBox Content="Computer Vision API" IsChecked="True" x:Name="ComputerVisionApi" />
-                <CheckBox Content="Custom Vision API" IsChecked="False" x:Name="CustomVisionApi" Visibility="Collapsed" />
+                <CheckBox Content="Custom Vision API" IsChecked="False" x:Name="CustomVisionApi"/>
+                <StackPanel Visibility="{Binding IsChecked, ElementName=CustomVisionApi, Converter={StaticResource VisibleIfTrue}}" Spacing="10">
+                    <TextBlock Text="Select Custom Vision projects" Margin="-10,20,0,-5"/>
+                    <TextBlock Margin="0,12" Style="{StaticResource CaptionTextBlockStyle}" Visibility="{x:Bind CustomVisionProjects.Count, Mode=OneWay,Converter={StaticResource VisibleIfZero}}">
+                            <Run Text="You have no trained Custom Vision projects."/>
+                            <LineBreak/>
+                            <Run Text="Please create one"/>
+                            <Hyperlink Click="NavigateCustomVisionSetup">
+                                <Run Text="here."/>
+                            </Hyperlink>
+                    </TextBlock>
+                    <ScrollViewer MaxHeight="200">
+                        <ItemsControl ItemsSource="{x:Bind CustomVisionProjects, Mode=OneWay}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Project.Name}" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
             </StackPanel>
         </StackPanel>
 

@@ -12,6 +12,7 @@ namespace DigitalAssetManagementTemplate
         ApplicationDataContainer _settings = ApplicationData.Current.LocalSettings;
 
         public static SettingsHelper Instance { get; private set; }
+        public static Func<Task> InitCustomVisionHandler { get; set; }
 
         static SettingsHelper()
         {
@@ -51,7 +52,29 @@ namespace DigitalAssetManagementTemplate
             set => Set(value);
         }
 
-        public void PushSettingsToServices()
+        public string CustomVisionTrainingApiKey
+        {
+            get => Get<string>(null);
+            set => Set(value);
+        }
+
+        public string CustomVisionPredictionApiKey
+        {
+            get => Get<string>(null);
+            set => Set(value);
+        }
+
+        public string CustomVisionApiKeyEndpoint
+        {
+            get => Get<string>("https://westus2.api.cognitive.microsoft.com");
+            set => Set(value);
+        }
+
+        public string CustomVisionTrainingApiKeyEndpoint { get => CustomVisionApiKeyEndpoint; }
+
+        public string CustomVisionPredictionApiKeyEndpoint { get => CustomVisionApiKeyEndpoint; }
+
+        public async Task PushSettingsToServices()
         {
             //face API
             FaceServiceHelper.ApiKey = FaceApiKey;
@@ -60,6 +83,9 @@ namespace DigitalAssetManagementTemplate
             //vision API
             VisionServiceHelper.ApiKey = VisionApiKey;
             VisionServiceHelper.ApiEndpoint = CognitiveServiceEndpoint;
+
+            //custom vision API
+            await (InitCustomVisionHandler?.Invoke() ?? Task.CompletedTask);
         }
     }
 }

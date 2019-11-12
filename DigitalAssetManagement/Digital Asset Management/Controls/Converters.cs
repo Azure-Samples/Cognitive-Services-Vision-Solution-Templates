@@ -95,7 +95,25 @@ namespace DigitalAssetManagementTemplate.Controls
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            return System.Convert.ToInt32(value) > 0 ? Visibility.Collapsed : Visibility.Visible;
+            //get min value
+            int.TryParse(parameter != null ? (string)parameter : string.Empty, out int minValue);
+
+            //get count
+            var count = 0;
+            if (value is int)
+            {
+                count = (int)value;
+            }
+            else
+            {
+                var collection = value as ICollection;
+                if (collection != null)
+                {
+                    count = collection.Count;
+                }
+            }
+
+            return count > minValue ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

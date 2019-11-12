@@ -1,4 +1,7 @@
-﻿using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
+﻿using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training.Models;
+using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Microsoft.Toolkit.Uwp.UI.Controls.TextToolbarSymbols;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
@@ -35,11 +38,16 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 {
     public sealed partial class DigitalAssetManagementPage : Page, INotifyPropertyChanged
     {
+        const int _maxImageCountPerProcessingCycle = 50;
+
         ImageProcessor _imageProcessor = new ImageProcessor();
         DigitalAssetData _currentData;
+        CustomVisionTrainingClient _customVisionTraining;
+        CustomVisionPredictionClient _customVisionPrediction;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
+        public ObservableCollection<ProjectViewModel> CustomVisionProjects { get; set; } = new ObservableCollection<ProjectViewModel>();
         public FilesViewModel FileManager { get; } = new FilesViewModel();
         public ImageFiltersViewModel ImageFilters { get; } = new ImageFiltersViewModel();
         
@@ -62,6 +70,10 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             //load files
             await FileManager.LoadFilesAsync();
 
+            //setup Custom Vision
+            await InitCustomVision();
+            SettingsHelper.InitCustomVisionHandler = InitCustomVision;
+
             base.OnNavigatedTo(e);
         }
 
@@ -70,6 +82,28 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             await FaceListManager.ResetFaceLists();
 
             base.OnNavigatingFrom(e);
+        }
+
+        async Task InitCustomVision()
+        {
+            //setup custom vision clients
+            if (!string.IsNullOrEmpty(SettingsHelper.Instance.CustomVisionTrainingApiKey) &&
+                !string.IsNullOrEmpty(SettingsHelper.Instance.CustomVisionPredictionApiKey))
+            {
+                _customVisionTraining = new CustomVisionTrainingClient { Endpoint = SettingsHelper.Instance.CustomVisionTrainingApiKeyEndpoint, ApiKey = SettingsHelper.Instance.CustomVisionTrainingApiKey };
+                _customVisionPrediction = new CustomVisionPredictionClient { Endpoint = SettingsHelper.Instance.CustomVisionPredictionApiKeyEndpoint, ApiKey = SettingsHelper.Instance.CustomVisionPredictionApiKey };
+            }
+
+            //get custom vision projects
+            CustomVisionProjects.Clear();
+            if (_customVisionTraining != null)
+            {
+                var projects = await _customVisionTraining.GetProjectsAsync();
+                CustomVisionProjects.AddRange(projects.OrderBy(i => i.Name).Select(i => new ProjectViewModel { Project = i }));
+            }
+
+            //enable UI
+            CustomVisionApi.IsEnabled = _customVisionTraining != null;
         }
 
         public DigitalAssetData CurrentData
@@ -125,7 +159,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 if (folder != null)
                 {
                     StorageApplicationPermissions.FutureAccessList.Add(folder);
-                    await LoadImages(new FileSource(new Uri(folder.Path)), 50, null);
+                    await LoadImages(new FileSource(new Uri(folder.Path)), _maxImageCountPerProcessingCycle, null);
                 }
             }
             catch (Exception ex)
@@ -141,7 +175,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 var dialog = new StorageDialog();
                 if ((await dialog.ShowAsync()) == ContentDialogResult.Primary)
                 {
-                    await LoadImages(new StorageSource(new Uri(dialog.SasUri)), 50, null);
+                    await LoadImages(new StorageSource(new Uri(dialog.SasUri)), _maxImageCountPerProcessingCycle, null);
                 }
             }
             catch (Exception ex)
@@ -164,7 +198,11 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             try
             {
                 //convert to view model
-                var data = await _imageProcessor.ProcessImagesAsync(source, GetCheckedServices(), fileLimit, startingFileIndex, async insight =>
+                var serviceTypes = (FaceApi.IsChecked.GetValueOrDefault() ? ImageProcessorServiceType.Face : 0) |
+                    (ComputerVisionApi.IsChecked.GetValueOrDefault() ? ImageProcessorServiceType.ComputerVision : 0) |
+                    (CustomVisionApi.IsChecked.GetValueOrDefault() ? ImageProcessorServiceType.CustomVision : 0);
+                var customVisionProjects = CustomVisionProjects.Where(i => i.IsSelected).Select(i => i.Project.Id).ToArray();
+                var data = await _imageProcessor.ProcessImagesAsync(source, await GetServices(serviceTypes, customVisionProjects), fileLimit, startingFileIndex, async insight =>
                 {
                     await ImageFilters.AddImage(insight);
                 });
@@ -241,7 +279,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 var source = data.Info.Source == "StorageSource" ? (ImageProcessorSource)new StorageSource(data.Info.Path) : new FileSource(data.Info.Path);
 
                 //convert to view model
-                var newData = await _imageProcessor.ProcessImagesAsync(source, data.Info.Services, fileLimit, data.Info.LastFileIndex, async insight =>
+                var newData = await _imageProcessor.ProcessImagesAsync(source, await GetServices(data.Info.Services, data.Info.CustomVisionProjects), fileLimit, data.Info.LastFileIndex, async insight =>
                 {
                     await ImageFilters.AddImage(insight);
                 });
@@ -287,9 +325,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 
         async void Reprocess_Click(object sender, RoutedEventArgs e)
         {
-            var value = (ReprocessComboBox.SelectedItem as ComboBoxItem).Content as string;
-            var fileLimit = value == "all" ? null : (int?)int.Parse(value);
-            await LoadMoreImages(fileLimit);
+            await LoadMoreImages(_maxImageCountPerProcessingCycle);
         }
 
         async void Download_Click(object sender, RoutedEventArgs e)
@@ -302,22 +338,22 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             await FileManager.DeleteFileAsync((sender as FrameworkElement).DataContext as FileViewModel);
         }
 
-        ImageProcessorService? GetCheckedServices()
+        async Task<IImageProcessorService[]> GetServices(ImageProcessorServiceType serviceTypes, Guid[] customVisionProjects)
         {
-            ImageProcessorService? result = 0;
-            if (FaceApi.IsChecked.GetValueOrDefault())
+            var result = new List<IImageProcessorService>();
+            if (serviceTypes.HasFlag(ImageProcessorServiceType.Face))
             {
-                result |= ImageProcessorService.Face;
+                result.Add(new FaceProcessorService());
             }
-            if (ComputerVisionApi.IsChecked.GetValueOrDefault())
+            if (serviceTypes.HasFlag(ImageProcessorServiceType.ComputerVision))
             {
-                result |= ImageProcessorService.ComputerVision;
+                result.Add(new ComputerVisionProcessorService());
             }
-            if (CustomVisionApi.IsChecked.GetValueOrDefault())
+            if (serviceTypes.HasFlag(ImageProcessorServiceType.CustomVision))
             {
-                result |= ImageProcessorService.CustomVision;
+                result.Add(new CustomVisionProcessorService(_customVisionPrediction, await CustomVisionProcessorService.GetProjectIterations(_customVisionTraining, customVisionProjects)));
             }
-            return result == 0 ? null : result;
+            return result.ToArray();
         }
 
         private void FilterChanged(object sender, RoutedEventArgs e)
@@ -374,6 +410,31 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         {
             DetailView.DataContext = e.ClickedItem;
             FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
+        }
+
+        private async void NavigateCustomVisionSetup(Windows.UI.Xaml.Documents.Hyperlink sender, Windows.UI.Xaml.Documents.HyperlinkClickEventArgs args)
+        {
+            //show settings
+            await new SettingsDialog().ShowAsync();
+        }
+
+
+        public class ProjectViewModel : INotifyPropertyChanged
+        {
+            bool _isSelected;
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            public Project Project { get; set; }
+            public bool IsSelected 
+            { 
+                get => _isSelected; 
+                set
+                {
+                    _isSelected = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
+                }
+            }
         }
     }
 }
