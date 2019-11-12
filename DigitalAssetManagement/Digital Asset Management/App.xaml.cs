@@ -41,7 +41,7 @@ namespace DigitalAssetManagementTemplate
         /// will be used such as when the application is launched to open a specific file.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
             var rootFrame = Window.Current.Content as AppShell;
 
@@ -68,7 +68,7 @@ namespace DigitalAssetManagementTemplate
                 if (rootFrame.AppFrame.Content == null)
                 {
                     //push settings
-                    SettingsHelper.Instance.PushSettingsToServices();
+                    await SettingsHelper.Instance.PushSettingsToServices();
 
                     // callbacks for core library
                     FaceServiceHelper.Throttled = () => ShowToastNotification("The Face API is throttling your requests. Consider upgrading to a Premium Key.");

@@ -21,11 +21,10 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 
         public async Task LoadFilesAsync()
         {
-            Files.Clear();
-
             //load file listing
             var folder = await GetFolder();
             var files = (await folder.GetFilesAsync()).OrderByDescending(i => i.DateCreated);
+            Files.Clear();
             foreach (var file in files)
             {
                 try
@@ -160,10 +159,19 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
     {
         public Uri Path { get; set; }
         public string Name { get; set; }
-        public ImageProcessorService Services { get; set; }
+        public ImageProcessorServiceType Services { get; set; }
+        public Guid[] CustomVisionProjects { get; set; }
         public int? FileLimit { get; set; }
         public int LastFileIndex { get; set; }
         public bool ReachedEndOfFiles { get; set; }
         public string Source { get; set; }
+    }
+
+    [Flags]
+    public enum ImageProcessorServiceType
+    {
+        Face = 1,
+        ComputerVision = 2,
+        CustomVision = 4
     }
 }

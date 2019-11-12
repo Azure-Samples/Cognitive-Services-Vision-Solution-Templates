@@ -1,4 +1,6 @@
 ﻿using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training;
 using Microsoft.Azure.CognitiveServices.Vision.Face;
 using System;
 using System.Collections.Generic;
@@ -52,6 +54,23 @@ namespace DigitalAssetManagementTemplate
                 CognitiveApiError.Visibility = Visibility.Visible;
                 hasError = true;
             }
+            if (!string.IsNullOrWhiteSpace(CustomVisionTrainingApi.Password) && !string.IsNullOrWhiteSpace(CustomVisionEndpoint.Text))
+            {
+                try
+                {
+                    //custom vision training
+                    var client = new CustomVisionTrainingClient { Endpoint = CustomVisionEndpoint.Text, ApiKey = CustomVisionTrainingApi.Password };
+                    await client.GetDomainsAsync();
+
+                    CustomVisionTrainingApiError.Visibility = Visibility.Collapsed;
+                }
+                catch (Exception ex)
+                {
+                    CustomVisionTrainingApiError.Text = Util.GetMessageFromException(ex);
+                    CustomVisionTrainingApiError.Visibility = Visibility.Visible;
+                    hasError = true;
+                }
+            }
 
             //save settings
             if (!hasError)
@@ -59,7 +78,10 @@ namespace DigitalAssetManagementTemplate
                 SettingsHelper.CognitiveServiceApiKey = CognitiveApi.Password;
                 SettingsHelper.CognitiveServiceEndpoint = ApiEndpoint.Text;
                 SettingsHelper.ShowAgeAndGender = Age.IsChecked.GetValueOrDefault();
-                SettingsHelper.PushSettingsToServices();
+                SettingsHelper.CustomVisionTrainingApiKey = CustomVisionTrainingApi.Password;
+                SettingsHelper.CustomVisionPredictionApiKey = CustomVisionPredictionApi.Password;
+                SettingsHelper.CustomVisionApiKeyEndpoint = CustomVisionEndpoint.Text;
+                await SettingsHelper.PushSettingsToServices();
 
                 args.Cancel = false;
                 Hide();

@@ -232,6 +232,12 @@
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.ComputerVision">
       <Version>6.0.0-dev.20190919.3</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction">
+      <Version>0.12.0-preview</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.CustomVision.Training">
+      <Version>0.13.0-preview</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Azure.CognitiveServices.Vision.Face">
       <Version>2.4.0-preview</Version>
     </PackageReference>

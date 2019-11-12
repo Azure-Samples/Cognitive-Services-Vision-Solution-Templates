@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Media.Imaging;
 using Microsoft.Azure.CognitiveServices.Vision.Face.Models;
 using Windows.Foundation;
 using Microsoft.Toolkit.Uwp.Helpers;
+using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
 
 namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
 {
@@ -44,11 +45,13 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         public FilterCollection PeopleFilters { get; set; } = new FilterCollection() { Name = "Number of people" };
         public FilterCollection FaceAttributesFilters { get; set; } = new FilterCollection() { Name = "Face attributes" };
         public FilterCollection FaceQualityFilters { get; set; } = new FilterCollection() { Name = "Face image quality" };
+        public FilterCollection CustomVisionTagFilters { get; set; } = new FilterCollection() { Name = "Custom Vision tags" };
+        public FilterCollection CustomVisionObjectFilters { get; set; } = new FilterCollection() { Name = "Custom Vision objects" };
 
         public ImageFiltersViewModel()
         {
             //set fields
-            _allFilters = new List<FilterCollection>() { TagFilters, FaceFilters, EmotionFilters, ObjectFilters, LandmarkFilters, CelebrityFilters, BrandFilters, WordFilters, ModerationFilters, ColorFilters, OrientationFilters, ImageTypeFilters, SizeFilters, AgeFilters, GenderFilters, PeopleFilters, FaceAttributesFilters, FaceQualityFilters };
+            _allFilters = new List<FilterCollection>() { TagFilters, FaceFilters, EmotionFilters, ObjectFilters, LandmarkFilters, CelebrityFilters, BrandFilters, WordFilters, ModerationFilters, ColorFilters, OrientationFilters, ImageTypeFilters, SizeFilters, AgeFilters, GenderFilters, PeopleFilters, FaceAttributesFilters, FaceQualityFilters, CustomVisionTagFilters, CustomVisionObjectFilters };
         }
 
         public void Clear()
@@ -259,6 +262,20 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
                 AddFilter(FaceQualityFilters, entity, entity, insightsViewModel);
             }
 
+            //Custom Vision tags
+            insightsViewModel.CustomVisionTags = GetCustomVisionTags(insights.CustomVisionInsights).ToArray();
+            foreach (var entity in insightsViewModel.CustomVisionTags)
+            {
+                AddFilter(CustomVisionTagFilters, entity, entity, insightsViewModel);
+            }
+
+            //Custom Vision objects
+            insightsViewModel.CustomVisionObjects = GetCustomVisionObjects(insights.CustomVisionInsights).ToArray();
+            foreach (var entity in insightsViewModel.CustomVisionObjects)
+            {
+                AddFilter(CustomVisionObjectFilters, entity, entity, insightsViewModel);
+            }
+
             if (SettingsHelper.Instance.ShowAgeAndGender) //only if age and gender is allowed
             {
                 //Age
@@ -401,14 +418,14 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             var result = new List<string>();
 
             //from person objects
-            var objectCount = 0;
+            var objectCount = -1;
             if (objects != null)
             {
                 objectCount = objects.Where(i => i == "person").Count();
             }
 
             //from faces
-            var faceCount = 0;
+            var faceCount = -1;
             if (faces != null)
             {
                 faceCount = faces.Length;
@@ -422,7 +439,7 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             {
                 result.Add("contains no people");
             }
-            else
+            else if (peopleCount > 0)
             {
                 result.Add("contains a person");
             }
@@ -639,6 +656,16 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
             }
             return result.Distinct();
         }
+
+        IEnumerable<string> GetCustomVisionTags(CustomVisionInsights[] customVision)
+        {
+            return customVision?.Where(i => !i.IsObjectDetection).SelectMany(i => i.Predictions.Where(e => e.Probability > .5).Select(e => e.Name)) ?? Enumerable.Empty<string>();
+        }
+
+        IEnumerable<string> GetCustomVisionObjects(CustomVisionInsights[] customVision)
+        {
+            return customVision?.Where(i => i.IsObjectDetection).SelectMany(i => i.Predictions.Where(e => e.Probability > .5).Select(e => e.Name)) ?? Enumerable.Empty<string>();
+        }
     }
 
     public class ImageInsightsViewModel
@@ -655,6 +682,8 @@ namespace DigitalAssetManagementTemplate.Views.DigitalAssetManagement
         public string[] People { get; set; }
         public string[] FaceAttributes { get; set; }
         public string[] FaceQualtity { get; set; }
+        public string[] CustomVisionTags { get; set; }
+        public string[] CustomVisionObjects { get; set; }
         public string[] Age { get; set; }
         public string[] Gender { get; set; }
     }
