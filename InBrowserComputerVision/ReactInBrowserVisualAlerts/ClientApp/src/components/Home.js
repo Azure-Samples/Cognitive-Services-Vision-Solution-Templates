@@ -4,7 +4,7 @@ import * as cvstfjs from 'customvision-tfjs';
 import * as tf from '@tensorflow/tfjs';
 
 import { Button, ButtonGroup, Col, Row, Form, FormGroup, Label, Input } from 'reactstrap';
-
+import model from './savedModel/model.json';
 
 export class VisualAlerts extends Component {
     displayName = VisualAlerts.name;
@@ -250,7 +250,7 @@ export class VisualAlerts extends Component {
             const response = {
                 file: this.state.downloadUri,
             };
-            window.location.href = response.file;
+            window.open(response.file);
         }, 100);
         this.setState({
             exportingState: 'Export',
@@ -276,7 +276,7 @@ export class VisualAlerts extends Component {
 
         this.setState({ loadingState: 'Loading model' });
         let model = new cvstfjs.ClassificationModel();
-        await model.loadModelAsync('savedModel/model.json');
+        await model.loadModelAsync('./savedModel/model.json');
         var reshaped = tf.randomNormal([1, 224, 224, 3]);
         reshaped = reshaped.reshape([-1, 224, 224, 3]);
         const predictions = await model.executeAsync(reshaped);
@@ -431,6 +431,10 @@ export class VisualAlerts extends Component {
                     <FormGroup row>
                         <Button color="primary" size="lg"  onClick={() => this.createProject()}>
                             Begin
+                        </Button>
+
+                        <Button color="primary" size="lg" onClick={() => this.Load()}>
+                            Load
                         </Button>
 
                     </FormGroup>
