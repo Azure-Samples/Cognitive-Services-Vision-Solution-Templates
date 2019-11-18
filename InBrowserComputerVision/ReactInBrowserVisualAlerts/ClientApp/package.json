@@ -5,6 +5,7 @@
   "dependencies": {
     "bootstrap": "^3.4.1",
     "customvision-tfjs": "^1.0.1",
+    "jszip": "^3.2.2",
     "react": "^16.11.0",
     "react-bootstrap": "^0.31.5",
     "react-dom": "^16.11.0",

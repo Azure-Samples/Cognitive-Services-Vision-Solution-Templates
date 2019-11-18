@@ -3,8 +3,10 @@ import Webcam from 'react-webcam';
 import * as cvstfjs from 'customvision-tfjs';
 import * as tf from '@tensorflow/tfjs';
 
-import { Button, ButtonGroup, Col, Row, Form, FormGroup, Label, Input } from 'reactstrap';
+import { Button, ButtonGroup, Col, Row, Form, FormGroup, Label, Input, Spinner } from 'reactstrap';
 import model from './savedModel/model.json';
+import JSZip from 'jszip';
+
 
 export class VisualAlerts extends Component {
     displayName = VisualAlerts.name;
@@ -20,6 +22,7 @@ export class VisualAlerts extends Component {
             numNegative: 0,
             finishedCapturing: false,
             trainingState: 'Train',
+            trainingComplete: true,
             exportingState: 'Export',
             loadingState: 'Load',
             finishedTraining: false,
@@ -27,6 +30,7 @@ export class VisualAlerts extends Component {
             displayProjectCreationMode: true,
             displayTrainingMode: false,
             displayScoringMode: false,
+            stage: 'begin',
         };
 
         this.handleFormInput = this.handleFormInput.bind(this);
@@ -34,11 +38,18 @@ export class VisualAlerts extends Component {
         this.StartCapture = this.StartCapture.bind(this);
         this.StopCapture = this.StopCapture.bind(this);
         this.Train = this.Train.bind(this);
+        this.GetPerformance = this.GetPerformance.bind(this);
+        this.GetTrainStatus = this.GetTrainStatus.bind(this);
+        this.CheckTrainStatus = this.CheckTrainStatus.bind(this);
+        this.GetTrainStatus = this.GetTrainStatus.bind(this);
         this.Export = this.Export.bind(this);
         this.renderProjectCreation = this.renderProjectCreation.bind(this);
         this.renderTrainingMode = this.renderTrainingMode.bind(this);
         this.renderScoringMode = this.renderScoringMode.bind(this);
         this.renderCamera = this.renderCamera.bind(this);
+        this.renderCaptureNegativeClass = this.renderCaptureNegativeClass.bind(this);
+        this.renderCapturePositiveClass = this.renderCapturePositiveClass.bind(this);
+        this.renderTrain = this.renderTrain.bind(this);
         this.deleteProject = this.deleteProject.bind(this);
     }
 
@@ -96,6 +107,7 @@ export class VisualAlerts extends Component {
         this.setState({
             displayProjectCreationMode: false,
             displayTrainingMode: true,
+            stage: 'capture positive',
         });
     }
 
@@ -154,10 +166,68 @@ export class VisualAlerts extends Component {
         this.interval = setInterval(() => this.captureAndUpload(className), 600);
     }
 
-    StopCapture = () => {
+    StopCapture = async() => {
         this.setState({ captureOn: false });
         clearInterval(this.interval);
+        if (this.state.numPositive >= 5 && this.state.numNegative < 5) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            this.setState({ stage: 'capture negative' });
+        }
+        else if (this.state.numPositive >= 5 && this.state.numNegative >= 5) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            this.setState({ stage: 'train' });
+        }
+        
     }
+
+    GetTrainStatus() {
+        fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.1/training/projects/' + this.state.projectId + '/iterations/' + this.state.iterationId,
+            {
+                method: 'GET',
+                headers: {
+                    'Training-key': this.state.subscriptionKey,
+                },
+            }).then(response => response.json())
+            .then(data => {
+                console.log(data.status);
+                if (data.status != 'Training') {
+                    this.setState({ trainingComplete: true });
+                }
+            });        
+    }
+
+    CheckTrainStatus() {
+        this.trainStatusInterval = setInterval(() => this.GetTrainStatus(), 1000);
+        if (this.state.trainingComplete) {
+            clearInterval(this.trainStatusInterval);
+            return
+        }
+    } 
+
+    GetPerformance() {
+        fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.0/training/projects/' + this.state.projectId + '/iterations/' + this.state.iterationId + '/performance',
+            {
+                method: 'GET',
+                headers: {
+                    'Training-key': this.state.subscriptionKey,
+                },
+            }).then(response => response.json())
+            .then(data => {
+                if (data.precision) {
+                    this.setState({
+                        precision: data.precision.toFixed(3),
+                        recall: data.recall.toFixed(3),
+                        averagePrecision: data.averagePrecision.toFixed(3)
+                    });
+                }
+            });
+
+        this.setState({
+            trainingState: 'Train',
+            finishedTraining: true,
+        });
+    }
+
 
     async Train () {
         this.setState({
@@ -187,36 +257,38 @@ export class VisualAlerts extends Component {
             trainingState: 'Training',
             finishedTraining: false,
         });
-
-        await new Promise(resolve => setTimeout(resolve, 25000));
-
-
-        fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.0/training/projects/' + this.state.projectId + '/iterations/' + this.state.iterationId + '/performance',
-            {
-                method: 'GET',
-                headers: {
-                    'Training-key': this.state.subscriptionKey,
-                },
-            }).then(response => response.json())
-            .then(data => {
-                if (data.precision) {
-                    this.setState({
-                        precision: data.precision.toFixed(3),
-                        recall: data.recall.toFixed(3),
-                        averagePrecision: data.averagePrecision.toFixed(3)
-                    });
-                }
-            });
-
+        var trainingFlag = false;
+        while (true) {
+            console.log("Enquiring");
+            fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.1/training/projects/' + this.state.projectId + '/iterations/' + this.state.iterationId,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Training-key': this.state.subscriptionKey,
+                    },
+                }).then(response => response.json())
+                .then(data => {
+                    console.log(data.status);
+                    if (data.status != 'Training') {
+                        this.setState({ trainingComplete: true });
+                        trainingFlag = true;
+                        this.GetPerformance();
+                    }
+                });
+            await new Promise(resolve => setTimeout(resolve, 600));
+            if (trainingFlag) {
+                break;
+            }
+        };
         this.setState({
-            trainingState: 'Train',
+            trainingComplete: true,
             finishedTraining: true,
         });
     }
 
-    async Export () {
+    async Export() {
         this.setState({ exportingState: 'Exporting' });
-        
+
         fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.1/training/projects/' + this.state.projectId + '/iterations/' + this.state.iterationId + '/export?platform=TensorFlow&flavor=TensorFlowJS',
             {
                 method: 'POST',
@@ -256,6 +328,43 @@ export class VisualAlerts extends Component {
             exportingState: 'Export',
             finishedExporting: true,
         });
+
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        this.deleteProject();
+
+        fetch("https://cors-anywhere.herokuapp.com/" + this.state.downloadUri,
+            {
+                method: 'GET',
+                headers: {
+                    'Training-key': this.state.subscriptionKey,
+                },
+            }).then(response => response.blob()).then(response => {
+                console.log(response);
+
+                var new_zip = new JSZip();
+                new_zip.loadAsync(response)
+                    .then(async function (zip) {
+                        // you now have every files contained in the loaded zip
+                        console.log("UNZIPPED!!!!");
+                        console.log(zip);
+                        var labels = zip.file("labels.txt").async("text");
+                        var model = zip.file("model.json").async("blob");
+                        var weights = await zip.file("weights.bin").async("blob");
+                        return [labels, model, weights];
+                    }).then(unzipped => {
+                        this.setState({
+                            labels: unzipped[0],
+                            model: unzipped[1],
+                            weights: unzipped[2],
+                        });
+                        console.log(unzipped[1]);
+                    });/*.then(output => {
+                        return tf.loadLayersModel(tf.io.browserFiles([this.state.model, this.state.weights]));
+                    }).then(model => {
+                        console.log(model);
+                    });*/
+            });
+
     }
 
     async Load() {
@@ -271,7 +380,7 @@ export class VisualAlerts extends Component {
             finishedExporting: false,
             finishedTraining: false,
             testCaptureOn: false,
-
+            stage : 'scoring',
         });
 
         this.setState({ loadingState: 'Loading model' });
@@ -357,6 +466,7 @@ export class VisualAlerts extends Component {
             displayProjectCreationMode: true,
             displayScoringMode: false,
             displayTrainingMode: false,
+            stage: 'begin'
         });
     }
 
@@ -427,12 +537,15 @@ export class VisualAlerts extends Component {
                             />
                         </Col>
                     </FormGroup>
-                    <br /> <br />
+                    <br /> 
                     <FormGroup row>
                         <Button color="primary" size="lg"  onClick={() => this.createProject()}>
                             Begin
                         </Button>
 
+                        <br /> <br />
+                        <h4> If you already have a project exported, downloaded and unzipped with model.json and weights.bin in ClientApp/public/savedModel, click on load </h4>
+                        <br />
                         <Button color="primary" size="lg" onClick={() => this.Load()}>
                             Load
                         </Button>
@@ -516,6 +629,82 @@ export class VisualAlerts extends Component {
         )
     }
 
+    renderCapturePositiveClass() {
+        return (
+            <div>
+                <p> It's recommended to train the model with at least 5 images that have {this.state.tag} present and 5 images that have {this.state.tag} absent. Start by capturing some positive samples. </p>
+                {this.state.captureOn ?
+                    <div key="captureOn">
+                        <ButtonGroup>
+                            < Button key="stopCapture" color="primary" size="lg" style={{ width: '350px' }} onClick={this.StopCapture} active>Stop capture</Button>
+                        </ButtonGroup>
+                    </div> :
+                    <div key="captureOff">
+                        <ButtonGroup>
+                            < Button key="captureOne" color="success" size="lg" style={{ width: '350px' }} onClick={() => this.StartCapture('positive')} >Capture {this.state.tag} </Button>
+                        </ButtonGroup>
+                    </div>
+                }
+                <br />
+                Number of images captured: {this.state.numPositive}
+                <br />
+                
+            </div>
+            )
+    }
+
+    renderCaptureNegativeClass() {
+        return (
+            <div>
+                <p>Done with the positive samples. Capture some negative samples now by pointing the camera to anything else as long as {this.state.tag} isn't in the frame. </p>
+                {this.state.captureOn ?
+                    <div key="captureOn">
+                        <ButtonGroup>
+                            < Button key="stopCapture" color="primary" size="lg" style={{ width: '350px' }} onClick={this.StopCapture} active>Stop capture</Button>
+                        </ButtonGroup>
+                    </div> :
+                    <div key="captureOff">
+                        <ButtonGroup>
+                            < Button key="captureTwo" color="danger" size="lg" style={{ width: '350px' }} onClick={() => this.StartCapture('negative')} >Capture absence of {this.state.tag} </Button>
+                        </ButtonGroup>
+                    </div>
+                }
+                <br />
+                Number of images captured: {this.state.numNegative}
+            </div>
+        )
+    }
+
+    renderTrain() {
+        return (
+            <div>
+                {this.state.finishedTraining ?
+                    < Button key="Train" color="primary" size="lg" style={{ width: '250px' }} disabled> Training complete </Button> :
+                    <div>
+                        < Button key="Train" color="primary" size="lg" style={{ width: '250px' }} onClick={this.Train}>{this.state.trainingState + ' '} </Button>
+                        {this.state.trainingState === 'Training' ? <Spinner color="success" /> : null}
+                    </div>}
+
+                <br />
+                {this.state.recall ? <div> <br /> Recall: {this.state.recall} <br /> Precision: {this.state.precision} <br /> Average Precision: {this.state.averagePrecision} <br /> </div> : null}
+                <br />
+                {this.state.finishedTraining ?
+                    < Button key="Export" color="primary" size="lg" style={{ width: '250px' }} onClick={this.Export} >{this.state.exportingState}</Button>
+                    : null }
+                {this.state.finishedExporting ?
+                    <div>
+                        <br /> 
+                        <p> Download and unzip the downloaded file in ClientApp/public/savedModel . The page will automatically refresh when there's a change in the folder. Click load model in the landing page once you've replaced the existing model.json and weights.bin in the ClientApp/public/savedModel folder with the weights of the file just downloaded.</p>
+                    </div>: null}
+
+            </div>
+            )
+    }
+
+    
+
+
+
     render() {
         return (
             <div>
@@ -524,7 +713,13 @@ export class VisualAlerts extends Component {
                 <center>
                     <this.renderCamera />
                     <br /><br />
-                    {this.state.displayProjectCreationMode ? < this.renderProjectCreation /> :
+
+                    {this.state.stage === 'begin' ? < this.renderProjectCreation /> : null}
+                    {this.state.stage === 'capture positive' ? <this.renderCapturePositiveClass /> : null}
+                    {this.state.stage === 'capture negative' ? <this.renderCaptureNegativeClass /> : null}
+                    {this.state.stage === 'train' ? <this.renderTrain /> : null}
+                    {this.state.stage === 'scoring' ? <this.renderScoringMode /> : null}
+                    {/*this.state.displayProjectCreationMode ? < this.renderProjectCreation /> :
                         [this.state.displayTrainingMode ? <this.renderTrainingMode /> : <this.renderScoringMode /> ]
                     }
                     <br /> <br />
@@ -532,7 +727,12 @@ export class VisualAlerts extends Component {
                         <Button color="secondary" size="lg" onClick={() => this.startOver()}>
                             Start Over
                         </Button>
-                    }
+                    */}
+                    <br /> <br />
+                    {this.state.stage === 'begin' ? null :
+                        <Button color="secondary" size="lg" onClick={() => this.startOver()}>
+                        Start Over
+                        </Button>}
                 </center>
                 <canvas style={{ visibility: 'hidden' }} ref={(canvas) => this.canvas = canvas} />
             </div>
