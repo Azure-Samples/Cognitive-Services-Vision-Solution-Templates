@@ -6,6 +6,7 @@ import * as tf from '@tensorflow/tfjs';
 import { Button, ButtonGroup, Col, Row, Form, FormGroup, Label, Input, Spinner } from 'reactstrap';
 import model from './savedModel/model.json';
 import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 
 export class VisualAlerts extends Component {
@@ -24,7 +25,7 @@ export class VisualAlerts extends Component {
             trainingState: 'Train',
             trainingComplete: true,
             exportingState: 'Export',
-            loadingState: 'Load',
+            loadingState: 'Load model and begin scoring',
             finishedTraining: false,
             finishedExporting: false,
             modelFile: '',
@@ -53,6 +54,7 @@ export class VisualAlerts extends Component {
         this.renderCaptureNegativeClass = this.renderCaptureNegativeClass.bind(this);
         this.renderCapturePositiveClass = this.renderCapturePositiveClass.bind(this);
         this.renderTrain = this.renderTrain.bind(this);
+        this.renderModelUpload = this.renderModelUpload.bind(this);
         this.deleteProject = this.deleteProject.bind(this);
         this.LoadModelFromFile = this.LoadModelFromFile.bind(this);
     }
@@ -174,12 +176,14 @@ export class VisualAlerts extends Component {
         this.setState({ captureOn: false });
         clearInterval(this.interval);
         if (this.state.numPositive >= 5 && this.state.numNegative < 5) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 10));
             this.setState({ stage: 'capture negative' });
         }
         else if (this.state.numPositive >= 5 && this.state.numNegative >= 5) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 10));
             this.setState({ stage: 'train' });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            this.Train();
         }
         
     }
@@ -208,7 +212,8 @@ export class VisualAlerts extends Component {
         }
     } 
 
-    GetPerformance() {
+    async GetPerformance() {
+        await new Promise(resolve => setTimeout(resolve, 1000));
         fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.0/training/projects/' + this.state.projectId + '/iterations/' + this.state.iterationId + '/performance',
             {
                 method: 'GET',
@@ -288,6 +293,8 @@ export class VisualAlerts extends Component {
             trainingComplete: true,
             finishedTraining: true,
         });
+        await new Promise(resolve => setTimeout(resolve, 600));
+        this.Export();
     }
 
     async Export() {
@@ -317,21 +324,28 @@ export class VisualAlerts extends Component {
                 this.setState({
                     downloadUri: data[0].downloadUri
                 });
+                return data[0].downloadUri;
+            }).then(uri => {
+                var FileSaver = require('file-saver');
+                let fileSaveAsPath = this.state.tag + '.zip';
+                FileSaver.saveAs(uri, fileSaveAsPath);
+                this.setState({
+                    exportingState: 'Exported',
+                    finishedExporting: true,
+                });
             });
+        await new Promise(resolve => setTimeout(resolve, 2000));
         console.log(this.state.downloadUri);
 
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
+        
+        /*
         setTimeout(() => {
             const response = {
                 file: this.state.downloadUri,
             };
             window.open(response.file);
-        }, 100);
-        this.setState({
-            exportingState: 'Export',
-            finishedExporting: true,
-        });
+        }, 100);*/
+        
 
         await new Promise(resolve => setTimeout(resolve, 3000));
         this.deleteProject();
@@ -367,8 +381,10 @@ export class VisualAlerts extends Component {
                     }).then(model => {
                         console.log(model);
                     });*/
+            }).then(response => {
+                this.setState({ stage: 'upload' });
             });
-
+        
     }
 
     async Load() {
@@ -400,19 +416,34 @@ export class VisualAlerts extends Component {
         this.testInterval = setInterval(() => this.Predict(), 300);
 
         this.setState({
-            loadingState: 'Loaded model',
             testCaptureOn: true,
         });
 
     }
 
     async LoadModelFromFile() {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.setState({loadingState: 'Loading'});
+        //await new Promise(resolve => setTimeout(resolve, 1000));
         console.log(this.state.modelFile);
         console.log(this.state.weightsFile);
-        await tf.loadGraphModel(tf.io.browserFiles(
+        var model = await tf.loadGraphModel(tf.io.browserFiles(
             [this.state.modelFile, this.state.weightsFile]));
         console.log("MODEL LOADED!");
+        var reshaped = tf.randomNormal([1, 224, 224, 3]);
+        reshaped = reshaped.reshape([-1, 224, 224, 3]);
+        const predictions = await model.execute(reshaped);
+        console.log({ predictions });
+        this.setState({
+            loadingState: 'Loaded',
+            model: model,
+        });
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.setState({
+            stage: 'scoring',
+            testCaptureOn: true,
+        });
+        this.testInterval = setInterval(() => this.Predict(), 300);
+
     }
 
     async Predict() {
@@ -428,8 +459,19 @@ export class VisualAlerts extends Component {
         img.onload = async () => {
             var t0 = performance.now();
             await ctx.drawImage(img, 0, 0, 640, 360, 0, 0, 640, 360);
-            const Img = await ctx.getImageData(0, 0, 640, 360);
-            const actualPredictions = await model.executeAsync(Img);
+            const pixels = await ctx.getImageData(0, 0, 640, 360);
+            //const actualPredictions = await model.executeAsync(pixels);
+
+            const image = await tf.browser.fromPixels(pixels, 3);
+            const [h, w] = image.shape.slice(0, 2);
+            const top = h > w ? (h - w) / 2 : 0;
+            const left = h > w ? 0 : (w - h) / 2;
+            const size = Math.min(h, w);
+            const rgb_image = tf.image.cropAndResize(image.expandDims().toFloat(), [[top / h, left / w, (top + size) / h, (left + size) / w]], [0], [224, 224]);
+            const inputs = await rgb_image.reverse(-1);
+            const outputs = await this.state.model.execute(inputs);
+            const actualPredictions = await outputs.array();
+
             var predicted = actualPredictions[0];
             var t1 = performance.now();
             const latency = (1000 / (0.1 + t1 - t0)).toFixed(1);
@@ -558,22 +600,16 @@ export class VisualAlerts extends Component {
                                 onChange={this.handleFormInput}
                             />
                         </Col>
-                    </FormGroup>
-                    <br /> 
-                    <FormGroup row>
-                        <Button color="primary" size="lg"  onClick={() => this.createProject()}>
-                            Begin
-                        </Button>
-
-                        <br /> <br />
-                        <h4> If you already have a project exported, downloaded and unzipped with model.json and weights.bin in ClientApp/public/savedModel, click on load </h4>
-                        <br />
-                        <Button color="primary" size="lg" onClick={() => this.Load()}>
-                            Load
-                        </Button>
 
                     </FormGroup>
                 </Form>
+                <br /> 
+                
+                <Button color="primary" size="lg"  onClick={() => this.createProject()}>
+                    Begin
+                </Button>
+                        
+
             </div>
         );
     }
@@ -620,7 +656,6 @@ export class VisualAlerts extends Component {
                 {this.state.finishedExporting ?
                     <div>
                         <br /> <br />
-                        <p> Download and unzip the downloaded file in ClientApp/public/savedModel </p>
                         <Button color="warning" size="lg" onClick={() => this.Load()}>
                             Load
                         </Button>
@@ -636,29 +671,16 @@ export class VisualAlerts extends Component {
     renderScoringMode() {
         return (
             <div>
-                {this.state.loadingState} <br /> <br />
                 {this.state.confidence ? <h4> <br /> {this.state.class} ({this.state.confidence}%) </h4 > : null}
                 <br /> <br />
                 {this.state.latency ? <p> Frame-rate: {this.state.latency} fps</p> : null}
 
-                {this.state.loadingState === 'Loaded model' ? <div> {this.state.testCaptureOn ?
+                {this.state.testCaptureOn ?
                     < Button key="Test" color="danger" style={{ width: '200px' }} onClick={this.StopTestCapture} >Pause scoring</Button> :
                     < Button key="Test" color="success" style={{ width: '200px' }} onClick={this.StartTestCapture}>Resume scoring</Button>
-                } </div> : null}
+                } 
 
-                <br /> <br />
-                <Input type="file"
-                    name="modelFile"
-                    id="modelFile"
-                    onChange={this.handleFileUpload}
-                />
-                <Input type="file"
-                    name="weightsFile"
-                    id="weightsFile"
-                    onChange={this.handleFileUpload}
-                />
                 
-                <Button onClick={this.LoadModelFromFile}> Submit </Button>
             </div>
         )
     }
@@ -670,7 +692,7 @@ export class VisualAlerts extends Component {
                 {this.state.captureOn ?
                     <div key="captureOn">
                         <ButtonGroup>
-                            < Button key="stopCapture" color="primary" size="lg" style={{ width: '350px' }} onClick={this.StopCapture} active>Stop capture</Button>
+                            < Button key="stopCapture" color="primary" size="lg" style={{ width: '350px' }} onClick={this.StopCapture} active> {this.state.numPositive > 4 ? <span>Stop capture and proceed </span> : <span>Stop capture </span> } </Button>
                         </ButtonGroup>
                     </div> :
                     <div key="captureOff">
@@ -694,7 +716,7 @@ export class VisualAlerts extends Component {
                 {this.state.captureOn ?
                     <div key="captureOn">
                         <ButtonGroup>
-                            < Button key="stopCapture" color="primary" size="lg" style={{ width: '350px' }} onClick={this.StopCapture} active>Stop capture</Button>
+                            < Button key="stopCapture" color="primary" size="lg" style={{ width: '350px' }} onClick={this.StopCapture} active> {this.state.numNegative > 4 ? <span>Stop capture and begin training </span> : <span>Stop capture </span>} </Button>
                         </ButtonGroup>
                     </div> :
                     <div key="captureOff">
@@ -715,22 +737,60 @@ export class VisualAlerts extends Component {
                 {this.state.finishedTraining ?
                     < Button key="Train" color="primary" size="lg" style={{ width: '250px' }} disabled> Training complete </Button> :
                     <div>
-                        < Button key="Train" color="primary" size="lg" style={{ width: '250px' }} onClick={this.Train}>{this.state.trainingState + ' '} </Button>
-                        {this.state.trainingState === 'Training' ? <Spinner color="success" /> : null}
+                        < Button key="Train" color="primary" size="lg" style={{ width: '250px' }} onClick={this.Train}>{this.state.trainingState + "  "} {this.state.trainingState === 'Training' ? <Spinner color="light" style={{ marginLeft: '7px' }} /> : null}  </Button>                        
                     </div>}
 
                 <br />
                 {this.state.recall ? <div> <br /> Recall: {this.state.recall} <br /> Precision: {this.state.precision} <br /> Average Precision: {this.state.averagePrecision} <br /> </div> : null}
                 <br />
                 {this.state.finishedTraining ?
-                    < Button key="Export" color="primary" size="lg" style={{ width: '250px' }} onClick={this.Export} >{this.state.exportingState}</Button>
+                    < Button key="Export" color="primary" size="lg" style={{ width: '250px' }} onClick={this.Export} disabled>{this.state.exportingState}</Button>
                     : null }
                 {this.state.finishedExporting ?
                     <div>
                         <br /> 
-                        <p> Download and unzip the downloaded file in ClientApp/public/savedModel . The page will automatically refresh when there's a change in the folder. Click load model in the landing page once you've replaced the existing model.json and weights.bin in the ClientApp/public/savedModel folder with the weights of the file just downloaded.</p>
                     </div>: null}
 
+            </div>
+            )
+    }
+
+    renderModelUpload() {
+        return (
+            <div>
+                <p> Unzip the file that's just been downloaded. It should have 4 files of which you should upload model.json (this is the model topography) and weights.bin (this is the trained weights) </p>
+                <br /> <br />
+                <Form>
+                    <FormGroup row>
+                    <Col sm={3}> </Col>
+                    <Label for="modelFile" sm={2}>model.json</Label>
+                    <Col sm={4}>
+                        <Input type="file"
+                            name="modelFile"
+                            id="modelFile"
+                            onChange={this.handleFileUpload}
+                        />
+                    </Col>
+                </FormGroup>
+
+                <FormGroup row>
+                    <Col sm={3}> </Col>
+                    <Label for="weightsFile" sm={2}>weights.bin</Label>
+                    <Col sm={4}>
+                        <Input type="file"
+                            name="weightsFile"
+                            id="weightsFile"
+                            onChange={this.handleFileUpload}
+                        />
+                    </Col>
+                </FormGroup>
+
+                </Form>
+            <br />
+
+            <Button color="primary" size="lg" onClick={() => { this.LoadModelFromFile() }}>
+                    {this.state.loadingState}
+            </Button>
             </div>
             )
     }
@@ -752,6 +812,7 @@ export class VisualAlerts extends Component {
                     {this.state.stage === 'capture positive' ? <this.renderCapturePositiveClass /> : null}
                     {this.state.stage === 'capture negative' ? <this.renderCaptureNegativeClass /> : null}
                     {this.state.stage === 'train' ? <this.renderTrain /> : null}
+                    {this.state.stage === 'upload' ? <this.renderModelUpload /> : null}
                     {this.state.stage === 'scoring' ? <this.renderScoringMode /> : null}
                     {/*this.state.displayProjectCreationMode ? < this.renderProjectCreation /> :
                         [this.state.displayTrainingMode ? <this.renderTrainingMode /> : <this.renderScoringMode /> ]
