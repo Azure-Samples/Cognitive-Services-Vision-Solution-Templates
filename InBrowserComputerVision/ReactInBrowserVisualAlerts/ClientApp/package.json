@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "bootstrap": "^3.4.1",
+    "bootstrap": "^4.2.0",
     "customvision-tfjs": "^1.0.1",
     "jszip": "^3.2.2",
     "react": "^16.11.0",

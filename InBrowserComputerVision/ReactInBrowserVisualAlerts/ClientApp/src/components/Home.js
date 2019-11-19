@@ -27,6 +27,8 @@ export class VisualAlerts extends Component {
             loadingState: 'Load',
             finishedTraining: false,
             finishedExporting: false,
+            modelFile: '',
+            weightsFile: '',
             displayProjectCreationMode: true,
             displayTrainingMode: false,
             displayScoringMode: false,
@@ -34,6 +36,7 @@ export class VisualAlerts extends Component {
         };
 
         this.handleFormInput = this.handleFormInput.bind(this);
+        this.handleFileUpload = this.handleFileUpload.bind(this);
         this.makeblob = this.makeblob.bind(this);
         this.StartCapture = this.StartCapture.bind(this);
         this.StopCapture = this.StopCapture.bind(this);
@@ -51,6 +54,7 @@ export class VisualAlerts extends Component {
         this.renderCapturePositiveClass = this.renderCapturePositiveClass.bind(this);
         this.renderTrain = this.renderTrain.bind(this);
         this.deleteProject = this.deleteProject.bind(this);
+        this.LoadModelFromFile = this.LoadModelFromFile.bind(this);
     }
 
     setRef = webcam => {
@@ -402,6 +406,15 @@ export class VisualAlerts extends Component {
 
     }
 
+    async LoadModelFromFile() {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(this.state.modelFile);
+        console.log(this.state.weightsFile);
+        await tf.loadGraphModel(tf.io.browserFiles(
+            [this.state.modelFile, this.state.weightsFile]));
+        console.log("MODEL LOADED!");
+    }
+
     async Predict() {
         const imageSrc = await this.webcam.getScreenshot();
         
@@ -476,6 +489,15 @@ export class VisualAlerts extends Component {
         const name = target.name;
         this.setState({
             [name]: value
+        });
+
+    }
+
+    handleFileUpload(event) {
+        const target = event.target;
+        const name = target.name;
+        this.setState({
+            [name]: event.target.files[0]
         });
     }
 
@@ -623,8 +645,20 @@ export class VisualAlerts extends Component {
                     < Button key="Test" color="danger" style={{ width: '200px' }} onClick={this.StopTestCapture} >Pause scoring</Button> :
                     < Button key="Test" color="success" style={{ width: '200px' }} onClick={this.StartTestCapture}>Resume scoring</Button>
                 } </div> : null}
-                
 
+                <br /> <br />
+                <Input type="file"
+                    name="modelFile"
+                    id="modelFile"
+                    onChange={this.handleFileUpload}
+                />
+                <Input type="file"
+                    name="weightsFile"
+                    id="weightsFile"
+                    onChange={this.handleFileUpload}
+                />
+                
+                <Button onClick={this.LoadModelFromFile}> Submit </Button>
             </div>
         )
     }
