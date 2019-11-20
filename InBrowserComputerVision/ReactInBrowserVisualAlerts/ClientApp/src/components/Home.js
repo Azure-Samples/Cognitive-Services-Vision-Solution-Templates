@@ -2,9 +2,8 @@ import React, { Component, useState } from 'react';
 import Webcam from 'react-webcam';
 import * as cvstfjs from 'customvision-tfjs';
 import * as tf from '@tensorflow/tfjs';
-
+import Sidebar from 'react-sidebar';
 import { Button, ButtonGroup, Col, Row, Form, FormGroup, Label, Input, Spinner } from 'reactstrap';
-import model from './savedModel/model.json';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 
@@ -34,6 +33,7 @@ export class VisualAlerts extends Component {
             displayTrainingMode: false,
             displayScoringMode: false,
             stage: 'begin',
+            sidebarOpen: true,
         };
 
         this.handleFormInput = this.handleFormInput.bind(this);
@@ -57,6 +57,8 @@ export class VisualAlerts extends Component {
         this.renderModelUpload = this.renderModelUpload.bind(this);
         this.deleteProject = this.deleteProject.bind(this);
         this.LoadModelFromFile = this.LoadModelFromFile.bind(this);
+        this.onSetSidebarOpen = this.onSetSidebarOpen.bind(this);
+
     }
 
     setRef = webcam => {
@@ -328,7 +330,7 @@ export class VisualAlerts extends Component {
             }).then(uri => {
                 var FileSaver = require('file-saver');
                 let fileSaveAsPath = this.state.tag + '.zip';
-                FileSaver.saveAs(uri, fileSaveAsPath);
+                saveAs(uri, fileSaveAsPath);
                 this.setState({
                     exportingState: 'Exported',
                     finishedExporting: true,
@@ -338,13 +340,6 @@ export class VisualAlerts extends Component {
         console.log(this.state.downloadUri);
 
         
-        /*
-        setTimeout(() => {
-            const response = {
-                file: this.state.downloadUri,
-            };
-            window.open(response.file);
-        }, 100);*/
         
 
         await new Promise(resolve => setTimeout(resolve, 3000));
@@ -504,6 +499,10 @@ export class VisualAlerts extends Component {
         clearInterval(this.testInterval);
     }
 
+    onSetSidebarOpen(open) {
+        this.setState({ sidebarOpen: open });
+    }
+
     deleteProject() {
         console.log("Deleting project");
         fetch('https://' + this.state.endpoint + '.api.cognitive.microsoft.com/customvision/v3.1/training/projects/' + this.state.projectId ,
@@ -521,7 +520,22 @@ export class VisualAlerts extends Component {
             displayProjectCreationMode: true,
             displayScoringMode: false,
             displayTrainingMode: false,
-            stage: 'begin'
+            stage: 'begin',
+            captureOn: false,
+            numPositive: 0,
+            numNegative: 0,
+            finishedCapturing: false,
+            trainingState: 'Train',
+            trainingComplete: true,
+            exportingState: 'Export',
+            loadingState: 'Load model and begin scoring',
+            finishedTraining: false,
+            finishedExporting: false,
+            modelFile: '',
+            weightsFile: '',
+            recall: '',
+            class: '',
+            confidence: '',
         });
     }
 
@@ -559,7 +573,9 @@ export class VisualAlerts extends Component {
 
     renderProjectCreation() {
         return (
-            <div>
+            
+
+                <div>
                 <h3> Please enter your credentials to continue </h3>
                 <br /> <br /> 
                 
@@ -608,16 +624,15 @@ export class VisualAlerts extends Component {
                 <Button color="primary" size="lg"  onClick={() => this.createProject()}>
                     Begin
                 </Button>
-                        
+                </div>
 
-            </div>
         );
     }
 
     renderTrainingMode() {
         return (
             <div>
-                <p> It's recommended to have at least 5 images that have {this.state.tag} present and 5 images that have {this.state.tag} absent</p>
+                <p> It's recommended to have at least 5 images that have '{this.state.tag}' present and 5 images that have '{this.state.tag}' absent</p>
                 {this.state.captureOn ?
                     <div key="captureOn">
                         <ButtonGroup>
@@ -675,10 +690,10 @@ export class VisualAlerts extends Component {
                 <br /> <br />
                 {this.state.latency ? <p> Frame-rate: {this.state.latency} fps</p> : null}
 
-                {this.state.testCaptureOn ?
+                {/*this.state.testCaptureOn ?
                     < Button key="Test" color="danger" style={{ width: '200px' }} onClick={this.StopTestCapture} >Pause scoring</Button> :
                     < Button key="Test" color="success" style={{ width: '200px' }} onClick={this.StartTestCapture}>Resume scoring</Button>
-                } 
+                */} 
 
                 
             </div>
@@ -688,7 +703,7 @@ export class VisualAlerts extends Component {
     renderCapturePositiveClass() {
         return (
             <div>
-                <p> It's recommended to train the model with at least 5 images that have {this.state.tag} present and 5 images that have {this.state.tag} absent. Start by capturing some positive samples. </p>
+                <p> It's recommended to train the model with at least 5 images that have '{this.state.tag}' present and 5 images that have '{this.state.tag}' absent. Start by capturing some positive samples. </p>
                 {this.state.captureOn ?
                     <div key="captureOn">
                         <ButtonGroup>
@@ -697,7 +712,7 @@ export class VisualAlerts extends Component {
                     </div> :
                     <div key="captureOff">
                         <ButtonGroup>
-                            < Button key="captureOne" color="success" size="lg" style={{ width: '350px' }} onClick={() => this.StartCapture('positive')} >Capture {this.state.tag} </Button>
+                            < Button key="captureOne" color="success" size="lg" style={{ width: '350px' }} onClick={() => this.StartCapture('positive')} >Capture '{this.state.tag}' </Button>
                         </ButtonGroup>
                     </div>
                 }
@@ -712,7 +727,7 @@ export class VisualAlerts extends Component {
     renderCaptureNegativeClass() {
         return (
             <div>
-                <p>Done with the positive samples. Capture some negative samples now by pointing the camera to anything else as long as {this.state.tag} isn't in the frame. </p>
+                <p>Done with the positive samples. Capture some negative samples now by pointing the camera to anything else as long as '{this.state.tag}' isn't in the frame. </p>
                 {this.state.captureOn ?
                     <div key="captureOn">
                         <ButtonGroup>
@@ -721,7 +736,7 @@ export class VisualAlerts extends Component {
                     </div> :
                     <div key="captureOff">
                         <ButtonGroup>
-                            < Button key="captureTwo" color="danger" size="lg" style={{ width: '350px' }} onClick={() => this.StartCapture('negative')} >Capture absence of {this.state.tag} </Button>
+                            < Button key="captureTwo" color="danger" size="lg" style={{ width: '350px' }} onClick={() => this.StartCapture('negative')} >Capture absence of '{this.state.tag}' </Button>
                         </ButtonGroup>
                     </div>
                 }
@@ -758,7 +773,7 @@ export class VisualAlerts extends Component {
     renderModelUpload() {
         return (
             <div>
-                <p> Unzip the file that's just been downloaded. It should have 4 files of which you should upload model.json (this is the model topography) and weights.bin (this is the trained weights) </p>
+                <p> Unzip the file that's just been downloaded. The unzipped folder should have 4 files. Please point to the model.json and the weights.bin files using the file pickers below </p>
                 <br /> <br />
                 <Form>
                     <FormGroup row>
@@ -802,11 +817,16 @@ export class VisualAlerts extends Component {
     render() {
         return (
             <div>
-                <h3>In-Browser Visual Alerts using Azure Custom Vision</h3>
-                <br/> <br/>
                 <center>
-                    <this.renderCamera />
-                    <br /><br />
+
+                    <div>
+                        <h3>In-Browser Visual Alerts using Azure Custom Vision</h3>
+                        <br /> <br />
+
+                        <this.renderCamera />
+                        <br /><br />
+                    </div>
+                
 
                     {this.state.stage === 'begin' ? < this.renderProjectCreation /> : null}
                     {this.state.stage === 'capture positive' ? <this.renderCapturePositiveClass /> : null}
