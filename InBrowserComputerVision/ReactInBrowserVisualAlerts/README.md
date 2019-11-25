@@ -16,7 +16,7 @@ This sample illustrates how to leverage [Microsoft Azure Custom Vision Service](
 
 
 * Loads the exported model into the browser and predicts on a frame captured by the webcam
-![picture of scoring trained model](./images/VisualAlertsScoring.png "Scoring real-time")
+![picture of scoring trained model](./images/VisualAlertsScoring.gif "Scoring real-time")
 
 
 
