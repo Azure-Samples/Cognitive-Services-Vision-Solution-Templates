@@ -6,6 +6,7 @@
     "bootstrap": "^4.2.0",
     "customvision-tfjs": "^1.0.1",
     "file-saver": "^2.0.2",
+    "filejs": "0.0.1",
     "jszip": "^3.2.2",
     "react": "^16.11.0",
     "react-bootstrap": "^0.31.5",

@@ -2,7 +2,6 @@ import React, { Component, useState } from 'react';
 import Webcam from 'react-webcam';
 import * as cvstfjs from 'customvision-tfjs';
 import * as tf from '@tensorflow/tfjs';
-import Sidebar from 'react-sidebar';
 import { Button, ButtonGroup, Col, Row, Form, FormGroup, Label, Input, Spinner } from 'reactstrap';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
