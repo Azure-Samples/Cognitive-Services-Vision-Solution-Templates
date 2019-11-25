@@ -357,7 +357,6 @@ export class VisualAlerts extends Component {
                 var new_zip = new JSZip();
                 new_zip.loadAsync(response)
                     .then(async function (zip) {
-                        // you now have every files contained in the loaded zip
                         console.log("UNZIPPED!!!!");
                         console.log(zip);
                         var labels = zip.file("labels.txt").async("text");
@@ -371,11 +370,7 @@ export class VisualAlerts extends Component {
                             weights: unzipped[2],
                         });
                         console.log(unzipped[1]);
-                    });/*.then(output => {
-                        return tf.loadLayersModel(tf.io.browserFiles([this.state.model, this.state.weights]));
-                    }).then(model => {
-                        console.log(model);
-                    });*/
+                    });
             }).then(response => {
                 this.setState({ stage: 'upload' });
             });
@@ -834,15 +829,7 @@ export class VisualAlerts extends Component {
                     {this.state.stage === 'train' ? <this.renderTrain /> : null}
                     {this.state.stage === 'upload' ? <this.renderModelUpload /> : null}
                     {this.state.stage === 'scoring' ? <this.renderScoringMode /> : null}
-                    {/*this.state.displayProjectCreationMode ? < this.renderProjectCreation /> :
-                        [this.state.displayTrainingMode ? <this.renderTrainingMode /> : <this.renderScoringMode /> ]
-                    }
-                    <br /> <br />
-                    {this.state.displayProjectCreationMode ? null :
-                        <Button color="secondary" size="lg" onClick={() => this.startOver()}>
-                            Start Over
-                        </Button>
-                    */}
+                    
                     <br /> <br />
                     {this.state.stage === 'begin' ? null :
                         <Button color="secondary" size="lg" onClick={() => this.startOver()}>
