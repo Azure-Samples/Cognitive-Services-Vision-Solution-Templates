@@ -1,0 +1,28 @@
+{
+  "name": "ReactInBrowserVisualAlerts",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "^4.2.0",
+    "customvision-tfjs": "^1.0.1",
+    "file-saver": "^2.0.2",
+    "filejs": "0.0.1",
+    "jszip": "^3.2.2",
+    "react": "^16.11.0",
+    "react-bootstrap": "^0.31.5",
+    "react-dom": "^16.11.0",
+    "react-router-bootstrap": "^0.24.4",
+    "react-router-dom": "^4.2.2",
+    "react-scripts": "1.0.17",
+    "react-sidebar": "^3.0.2",
+    "react-webcam": "^4.0.0",
+    "reactstrap": "^8.1.1",
+    "rimraf": "^2.6.2"
+  },
+  "scripts": {
+    "start": "rimraf ./build && react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
