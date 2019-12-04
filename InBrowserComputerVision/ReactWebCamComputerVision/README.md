@@ -1,4 +1,8 @@
 # Sample for Computer Vision on the browser using the webcam
+
+![gif demonstrating the results](./images/ComputerVisionSample.gif)
+
+
 This sample illustrates how to leverage [Microsoft Azure Computer Vision Service](https://docs.microsoft.com/en-us/azure/cognitive-services/computer-vision/home) to analyze images captured from the webcam. It performs the following steps:
 * Captures an image from the webcam
 * Sends this image as a POST request utilising the REST API of Computer Vision Service
@@ -39,6 +43,7 @@ Hit F5 or run IIS Express. This should install required npm dependencies and lau
 
 Enter your credentials in the settings sidebar, click anywhere outside, and begin analyzing the webcam feed.
 
+![image with one analysis](./images/ReactComputerVision.png)
 
 ## Additional info
 * If there are errors associated with the react-dom, run `npm update react, react-dom` in the `ClientApp` folder on a terminal
