@@ -39,8 +39,7 @@ This code was based on Visual Studio's template when creating a new ASP.NET Core
 ## Running the sample
 
 Hit F5 or run IIS Express. This should install required npm dependencies and launch the browser. It might take about a minute the first time. Enable javascript and allow this site to use the webcam. You can change the webcam being used in your browser's settings. 
-
-Enter your credentials in the settings sidebar, click anywhere outside, and begin analyzing the webcam feed.
+Once you enter your credentials in the settings sidebar you will be ready to start processing images. To analyze a single image from the web cam feed, click on the "Analyze Single Frame" button. To analyze images from the web cam in a continuous loop, toggle the "Analyze Continuously" switch, as shown in the following animation.
 
 
 ![gif demonstrating the results](./images/ComputerVisionSample.gif)
