@@ -35,7 +35,7 @@ This demo runs in a continuous loop, following a state machine with 4 states:
 | [MainPage.xaml.cs](MainPage.xaml.cs) | Code behind for the XAML UI for the demo. It contains the state machine processing code.|
 | [CustomVision\CustomVisionServiceWrapper.cs](CustomVision/CustomVisionServiceWrapper.cs) | Wrapper class that facilitates integration with the Custom Vision Service.|
 | [CustomVision\CustomVisionONNXModel.cs](CustomVision/CustomVisionONNXModel.cs) | Wrapper class that facilitates integration with Windows ML for loading ONNX models and scoring images against it.|
-| [IoTHub\IotHubWrapper.cs](IoTHub/IotHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub.|
+| [IoTHub\IoTHubWrapper.cs](IoTHub/IoTHubWrapper.cs) | Wrapper class that facilitates integration with IoT Hub.|
 
 ## Setup
 
@@ -50,7 +50,7 @@ This demo runs in a continuous loop, following a state machine with 4 states:
       with the corresponding Guid for the Custom Vision project that should be used by the app during the visual state learning 
       workflow. **Important:** This needs to be a Compact image classification project, since we will be exporting the model to ONNX later.
 4. **IoT Hub setup**:
-    * In IoTHub\IotHubWrapper.cs, update ```s_connectionString = "Enter your device connection string here"``` with the proper 
+    * In IoTHub\IoTHubWrapper.cs, update ```s_connectionString = "Enter your device connection string here"``` with the proper 
       connection string for your device. Using the Azure portal, load up your IoT Hub instance, click on IoT devices under Explorers, click on
       your target device (or create one if needed), and find the connection string under Primary Connection String. The format should be similar
       to ```HostName={your iot hub name}.azure-devices.net;DeviceId={your device id};SharedAccessKey={your access key}```
