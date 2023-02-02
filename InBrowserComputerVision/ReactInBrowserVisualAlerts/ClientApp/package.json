@@ -7,7 +7,7 @@
     "customvision-tfjs": "^1.0.1",
     "file-saver": "^2.0.2",
     "filejs": "0.0.1",
-    "jszip": "^3.2.2",
+    "jszip": "^3.8.0",
     "react": "^16.11.0",
     "react-bootstrap": "^0.31.5",
     "react-dom": "^16.11.0",
